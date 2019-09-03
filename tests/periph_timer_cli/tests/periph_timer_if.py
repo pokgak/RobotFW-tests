@@ -49,6 +49,10 @@ class PeriphTimerIf(DutShell):
                                                                gpio_port,
                                                                gpio_pin))
 
+    def timer_read(self, dev=DEFAULT_TIMER_DEV):
+        """Read timer ticks."""
+        return self.send_cmd('timer_read {}'.format(dev))
+
     def timer_read_bench(self, dev=DEFAULT_TIMER_DEV,
                          repeat_cnt=DEFAULT_REPEAT_CNT,
                          gpio_port=DEFAULT_DBG_PORT,
