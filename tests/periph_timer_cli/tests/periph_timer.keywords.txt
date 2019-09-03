@@ -1,0 +1,49 @@
+*** Settings ***
+Library             PeriphTimer  port=%{PORT}  baudrate=%{BAUD}  timeout=${%{CMD_TIMEOUT}}  connect_wait=${%{CONNECT_WAIT}}
+
+Resource            api_shell.keywords.txt
+Resource            philip.keywords.txt
+
+*** Keywords ***
+Enable Debug GPIO Trace On Pin ${pin}
+    [Documentation]           Enable tracing for a gpio debug pin
+    API Call Should Succeed   PHiLIP.Write Reg  gpio[${pin}].mode.init  0
+    API Call Should Succeed   PHiLIP.Write Reg  gpio[${pin}].mode.io_type  3
+    API Call Should Succeed   PHiLIP.Execute Changes
+
+Timer Set To ${ticks} And Measure
+    [Documentation]           Set a timer and use PHiLIP to measure the delay
+    ...                       between calling set_timer and entering the timer
+    ...                       ISR callback by tracing a GPIO debug pin
+    Run Keywords              PHiLIP Reset
+    Run Keywords              Enable Debug GPIO Trace On Pin 0
+    API Call Should Succeed   Timer Set  dev=0  chan=0  ticks=${ticks}  gpio_port=${DEBUG_PORT}  gpio_pin=${DEBUG_PIN}
+
+Timer Init With ${freq} Hz and Set To ${ticks}
+    API Call Should Succeed   Timer Init  dev=0  freq=${freq}  cbname=cb_toggle  gpio_port=${DEBUG_PORT}  gpio_pin=${DEBUG_PIN}
+    API Call Should Succeed   Timer Set  dev=0  chan=0  ticks=${ticks}  gpio_port=${DEBUG_PORT}  gpio_pin=${DEBUG_PIN}
+
+Measure Timer Delay For ${ticks}
+    [Documentation]           Returns the time it took between set_timer and entering
+    ...                       the timer ISR callback (measured by PHiLIP)
+    Run Keyword               Timer Set To ${ticks} And Measure
+    API Call Should Succeed   PHiLIP.Read Trace
+    ${trace}=                 Set Variable  ${RESULT['data']}
+    ${d1}=                    Evaluate  ${trace}[1][time] - ${trace}[0][time]
+    [return]                  ${d1}
+
+Check If Timer At ${freq} Hz Has Less Error Than ${perc} Percent
+    [Documentation]           Checks if the timer frequency error is below the
+    ...                       given percentage
+    Run Keywords              PHiLIP.DUT Reset
+    ${RESULT}=                Run Keyword  Timer Init  dev=0  freq=${freq}  cbname=cb_toggle  gpio_port=${DEBUG_PORT}  gpio_pin=${DEBUG_PIN}
+
+    # skip to next frequency  if init says this frequency is not supported
+    Continue For Loop If      '${RESULT['result']}' != 'Success'
+
+    ${ticks}=                 Evaluate  ${freq} / ${2}
+    ${ticks}=                 Convert To Integer  ${ticks}
+    ${delay_s}=               Measure Timer Delay For ${ticks}
+    ${abs_err_s}=             Evaluate  ${delay_s} - ${ticks} / ${freq}
+    ${rel_error_perc}=        Evaluate  abs(${abs_err_s} / (${ticks} / ${freq}) * 100)
+    Should Be True            ${rel_error_perc} < ${perc}
