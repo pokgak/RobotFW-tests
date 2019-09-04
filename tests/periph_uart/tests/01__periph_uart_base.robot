@@ -7,6 +7,7 @@ Suite Setup         Run Keywords    PHILIP Reset
 Test Setup          Run Keywords    PHILIP Reset
 ...                                 RIOT Reset
 ...                                 API Sync Shell
+Test Teardown       PHiLIP.DUT Reset
 
 Resource            periph_uart.keywords.txt
 Resource            api_shell.keywords.txt

@@ -7,6 +7,7 @@ Suite Setup         Run Keywords    RIOT Reset
 # reset application before running any test
 Test Setup          Run Keywords    RIOT Reset
 ...                                 API Sync Shell
+Test Teardown       PHiLIP.DUT Reset
 
 # import libs and keywords
 Library             Xtimer  port=%{PORT}  baudrate=%{BAUD}  timeout=${%{CMD_TIMEOUT}}  connect_wait=${%{CONNECT_WAIT}}

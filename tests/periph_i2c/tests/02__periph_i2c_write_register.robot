@@ -8,7 +8,8 @@ Test Setup          Run Keywords    PHILIP Reset
 ...                                 RIOT Reset
 ...                                 API Sync Shell
 ...                                 I2C Acquire
-Test Teardown       I2C Release
+Test Teardown       Run Keywords    I2C Release
+...                                 PHiLIP.DUT Reset
 Test Template       I2C Write Bytes To Register Should Succeed
 
 Resource            periph_i2c.keywords.txt
