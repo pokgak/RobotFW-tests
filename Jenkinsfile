@@ -46,6 +46,7 @@ def stepClone()
 
 def stepFlash(board, test)
 {
+    sh "make -C ${test} reset"
     sh "make -C ${test} flash"
 }
 
