@@ -7,6 +7,7 @@ Suite Setup         Run Keywords    PHiLIP.DUT Reset
 # reset application before running any test
 Test Setup          Run Keywords    PHiLIP.DUT Reset
 ...                                 API Sync Shell
+Test Teardown       PHiLIP.DUT Reset
 
 # import libs and keywords
 
