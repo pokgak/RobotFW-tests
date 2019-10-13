@@ -65,10 +65,22 @@ def stepTests(board, test)
         sh "make -C ${test} robot-test"
     }
     sh "make -C ${test} robot-html || true"
+}
 
+def stepPublish(board, test)
+{
     archiveArtifacts artifacts: "build/robot/${board}/${test_name}/*.xml"
     archiveArtifacts artifacts: "build/robot/${board}/${test_name}/*.html"
     junit "build/robot/${board}/${test_name}/xunit.xml"
+    step([$class: 'RobotPublisher',
+        disableArchiveOutput: false,
+        logFileName: 'log.html',
+        otherFiles: '',
+        outputFileName: 'output.xml',
+        outputPath: 'build/robot/${board}/${test_name}/',
+        passThreshold: 100,
+        reportFileName: 'report.html',
+        unstableThreshold: 0]);
 }
 
 // function to return steps per board
@@ -80,6 +92,7 @@ def parallelSteps (board, test) {
                 stepReset(board, test)
                 stepFlash(board, test)
                 stepTests(board, test)
+                stepPublish(board, test)
             }
         }
     }
