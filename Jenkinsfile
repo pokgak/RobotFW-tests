@@ -59,7 +59,6 @@ def stepFlash(board, test)
 
 def stepTests(board, test)
 {
-    def test_name = test.replaceAll('/', '_')
     sh "make -C ${test} robot-clean || true"
     catchError(buildResult: 'UNSTABLE', stageResult: 'SUCCESS') {
         sh "make -C ${test} robot-test"
@@ -69,6 +68,7 @@ def stepTests(board, test)
 
 def stepPublish(board, test)
 {
+    def test_name = test.replaceAll('/', '_')
     archiveArtifacts artifacts: "build/robot/${board}/${test_name}/*.xml"
     archiveArtifacts artifacts: "build/robot/${board}/${test_name}/*.html"
     junit "build/robot/${board}/${test_name}/xunit.xml"
