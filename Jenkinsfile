@@ -77,7 +77,7 @@ def stepPublish(board, test)
         logFileName: 'log.html',
         otherFiles: '',
         outputFileName: 'output.xml',
-        outputPath: 'build/robot/${board}/${test_name}/',
+        outputPath: "build/robot/${board}/${test_name}/",
         passThreshold: 100,
         reportFileName: 'report.html',
         unstableThreshold: 0]);
