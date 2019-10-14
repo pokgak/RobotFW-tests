@@ -72,15 +72,6 @@ def stepPublish(board, test)
     archiveArtifacts artifacts: "build/robot/${board}/${test_name}/*.xml"
     archiveArtifacts artifacts: "build/robot/${board}/${test_name}/*.html"
     junit "build/robot/${board}/${test_name}/xunit.xml"
-    step([$class: 'RobotPublisher',
-        disableArchiveOutput: false,
-        logFileName: 'log.html',
-        otherFiles: '',
-        outputFileName: 'output.xml',
-        outputPath: "build/robot/${board}/${test_name}/",
-        passThreshold: 100,
-        reportFileName: 'report.html',
-        unstableThreshold: 0]);
 }
 
 // function to return steps per board
@@ -143,6 +134,19 @@ for(int i=0; i < tests.size(); i++) {
             }
         )
     }
+}
+
+stage('Robot') {
+    copyArtifacts projectName: '${JOB_NAME}', selector: specific('${BUILD_NUMBER}')
+    step([$class: 'RobotPublisher',
+        disableArchiveOutput: false,
+        outputPath: "build/robot/",
+        outputFileName: '**/output.xml',
+        logFileName: '**/log.html',
+        reportFileName: '**/report.html',
+        otherFiles: '',
+        passThreshold: 100,
+        unstableThreshold: 0]);
 }
 
 stage('Notify') {
