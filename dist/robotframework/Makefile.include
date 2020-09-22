@@ -21,6 +21,10 @@ $(RFOUTPATH)/output.xml: $(ROBOT_TESTDIR)
 	python3 $(TESTBASE)/dist/tools/output_to_xunit/output_to_xunit.py \
 				--output $(RFOUTPATH)/xunit.xml \
 				$@
+	-python3 $(TESTBASE)/dist/tools/plot/plot_timer_benchmarks.py \
+				--outdir $(RFOUTPATH)/includes \
+				--for-ci \
+				$(RFOUTPATH)/xunit.xml
 
 # RF make targets
 robot-test: $(RFOUTPATH)/output.xml
@@ -31,3 +35,4 @@ robot-html:  $(RFOUTPATH)/output.xml
 robot-clean:
 	@rm -f $(RFOUTPATH)/*.xml
 	@rm -f $(RFOUTPATH)/*.html
+	@rm -rf $(RFOUTPATH)/includes
