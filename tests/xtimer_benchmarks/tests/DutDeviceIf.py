@@ -28,23 +28,23 @@ class DutDeviceIf(DutShell):
 
     def overhead_gpio(self):
         """Run the GPIO toggling overhead benchmark"""
-        return self.send_cmd(f"overhead_gpio")
+        return self.send_cmd("overhead_gpio")
 
     def overhead_timer_now(self):
         """Run the overhead timer_now function benchmark"""
-        return self.send_cmd(f"overhead_timer_now")
+        return self.send_cmd("overhead_timer_now")
 
     def overhead_timer(self, method, position):
         """Run the overhead timer benchmark"""
-        return self.cmd_extended_timeout(f"overhead_timer {method} {position}", 30)
+        return self.cmd_extended_timeout("overhead_timer {} {}".format(method, position), 30)
 
     def sleep_accuracy_timer_sleep(self, duration):
         """Run the sleep accuracy benchmark"""
-        return self.send_cmd(f"sleep_accuracy_timer_sleep {duration}")
+        return self.send_cmd("sleep_accuracy_timer_sleep {}".format(duration))
 
     def sleep_accuracy_timer_set(self, duration):
         """Run the sleep accuracy benchmark"""
-        return self.send_cmd(f"sleep_accuracy_timer_set {duration}")
+        return self.send_cmd("sleep_accuracy_timer_set {}".format(duration))
 
     def sleep_accuracy(self, call, duration):
         if call == "TIMER_SLEEP":
@@ -56,11 +56,11 @@ class DutDeviceIf(DutShell):
 
     def sleep_jitter(self, bg_timers, divisor=1):
         """Run the sleep jitter benchmark"""
-        return self.cmd_extended_timeout(f"sleep_jitter {bg_timers} {divisor}", 45)
+        return self.cmd_extended_timeout("sleep_jitter {} {}".format(bg_timers, divisor), 45)
 
     def drift(self, duration):
         """Run the drift simple benchmark"""
-        return self.cmd_extended_timeout(f"drift {duration}", 30)
+        return self.cmd_extended_timeout("drift {}".format(duration), 30)
 
     ## HELPER FUNCTIONS
 
