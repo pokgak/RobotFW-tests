@@ -31,7 +31,9 @@ class FigurePlotter:
         # parse
         accuracy_rows = []
         for prop in self.root.findall(
-            f"testcase[@classname='tests_{self.timer_version}_benchmarks.Sleep Accuracy']//property"
+            "testcase[@classname='tests_{}_benchmarks.Sleep Accuracy']//property".format(
+                self.timer_version
+            )
         ):
             name = prop.get("name").split("-")
             if "TIMER_SLEEP" in name:
@@ -85,7 +87,7 @@ class FigurePlotter:
         )
 
         fig.write_html(
-            f"{self.outdir}/{filename}",
+            "{}/{}".format(self.outdir, filename),
             full_html=self.full_html,
             include_plotlyjs=self.plotlyjs,
         )
@@ -137,7 +139,7 @@ class FigurePlotter:
         )
 
         fig.write_html(
-            f"{self.outdir}/{filename}",
+            "{}/{}".format(self.outdir, filename),
             full_html=self.full_html,
             include_plotlyjs=self.plotlyjs,
         )
@@ -169,7 +171,11 @@ class FigurePlotter:
                         e for e in dss if e["time"] == key and e["repeat"] == repeat_n
                     )
                     row.update(
-                        {"time": key, "repeat": repeat_n, value_source: value,}
+                        {
+                            "time": key,
+                            "repeat": repeat_n,
+                            value_source: value,
+                        }
                     )
                 except StopIteration:
                     row = {
@@ -201,7 +207,7 @@ class FigurePlotter:
         )
 
         fig.write_html(
-            f"{self.outdir}/{filename}",
+            "{}/{}".format(self.outdir, filename),
             full_html=self.full_html,
             include_plotlyjs=self.plotlyjs,
         )
@@ -231,7 +237,7 @@ class FigurePlotter:
         # ])
 
         fig.write_html(
-            f"{self.outdir}/{filename}",
+            "{}/{}".format(self.outdir, filename),
             full_html=self.full_html,
             include_plotlyjs=self.plotlyjs,
         )
@@ -270,10 +276,19 @@ class FigurePlotter:
             )
         )
 
-        fig.update_layout(height=200, margin=dict(autoexpand=True, t=5, l=0, r=0, b=5,))
+        fig.update_layout(
+            height=200,
+            margin=dict(
+                autoexpand=True,
+                t=5,
+                l=0,
+                r=0,
+                b=5,
+            ),
+        )
 
         fig.write_html(
-            f"{self.outdir}/{filename}",
+            "{}/{}".format(self.outdir, filename),
             full_html=self.full_html,
             include_plotlyjs=self.plotlyjs,
         )
@@ -303,6 +318,3 @@ if __name__ == "__main__":
     plotter.plot_overhead("overhead.html")
     plotter.plot_accuracy("accuracy.html")
     plotter.plot_jitter("jitter.html")
-    # TODO
-    #plotter.plot_drift_percentage("drift_percentage.html")
-    #plotter.plot_drift_diff("drift_diff.html")
