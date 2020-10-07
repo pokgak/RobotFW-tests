@@ -194,15 +194,16 @@ int timer_overhead_timer_cmd(int argc, char **argv)
         test_timers[i].arg = &overhead_triggers;
     }
 
+    unsigned timer_idx = -1;
     if (strcmp(method, "set") == 0) {
         if (strcmp(pos, "first") == 0) {
-            unsigned timer_idx = 0;
+            timer_idx = 0;
         }
         else if (strcmp(pos, "middle") == 0) {
-            unsigned timer_idx = (TEST_MAX_TIMERS / 2) - 1;
+            timer_idx = (TEST_MAX_TIMERS / 2) - 1;
         }
         else if (strcmp(pos, "last") == 0) {
-            unsigned timer_idx = TEST_MAX_TIMERS - 1;
+            timer_idx = TEST_MAX_TIMERS - 1;
         }
         else {
             goto error;
@@ -223,13 +224,13 @@ int timer_overhead_timer_cmd(int argc, char **argv)
     }
     else if (strcmp(method, "remove") == 0) {
         if (strcmp(pos, "first") == 0) {
-            unsigned timer_idx = 0;
+            timer_idx = 0;
         }
         else if (strcmp(pos, "middle") == 0) {
-            unsigned timer_idx = (TEST_MAX_TIMERS / 2) - 1;
+            timer_idx = (TEST_MAX_TIMERS / 2) - 1;
         }
         else if (strcmp(pos, "last") == 0) {
-            unsigned timer_idx = TEST_MAX_TIMERS - 1;
+            timer_idx = TEST_MAX_TIMERS - 1;
         }
         else {
             goto error;
