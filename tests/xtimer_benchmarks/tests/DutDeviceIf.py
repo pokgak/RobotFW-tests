@@ -60,7 +60,7 @@ class DutDeviceIf(DutShell):
 
     def drift(self, duration):
         """Run the drift simple benchmark"""
-        return self.cmd_extended_timeout("drift {}".format(duration), 45)
+        return self.cmd_extended_timeout("drift {}".format(duration), 75)
 
     ## HELPER FUNCTIONS
 
