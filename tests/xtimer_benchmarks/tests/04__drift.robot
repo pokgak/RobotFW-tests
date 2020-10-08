@@ -33,13 +33,11 @@ Measure Drift
 *** Test Cases ***
 Measure Drift Template
     [Template]  Measure Drift
-    10000
+    1000
     25000
     50000
-    65000
     75000
     100000
-    # 100000
     # 30000000
     # 30000000
     # 60000000
