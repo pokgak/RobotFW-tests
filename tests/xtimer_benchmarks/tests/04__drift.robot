@@ -33,8 +33,9 @@ Measure Drift
 *** Test Cases ***
 Measure Drift Template
     [Template]  Measure Drift
+    5000000
     10000000
-    # 15000000
+    15000000
     30000000
     # 45000000
-    55000000
+    # 55000000
