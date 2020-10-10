@@ -391,9 +391,9 @@ struct sleep_jitter_params {
 static struct sleep_jitter_params jitter_params[TEST_MAX_TIMERS];
 static volatile bool jitter_end;
 
-void cleanup_jitter(void)
+void cleanup_jitter(unsigned bg_timers)
 {
-    for (unsigned i = 0; i < TEST_MAX_TIMERS; ++i) {
+    for (unsigned i = 0; i < bg_timers; ++i) {
         TIMER_REMOVE(jitter_params->timer);
     }
 }
@@ -466,7 +466,7 @@ int sleep_jitter_cmd(int argc, char **argv)
 
     jitter_end = true;
 
-    cleanup_jitter();
+    cleanup_jitter(bg_timers);
 
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
     return 0;
