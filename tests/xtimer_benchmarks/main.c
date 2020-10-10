@@ -457,10 +457,10 @@ int sleep_jitter_cmd(int argc, char **argv)
 #endif
 
     for (unsigned i = 0; i < 5; i++) {
-        TIMER_PERIODIC_WAKEUP(&last_wakeup, 2 * JITTER_FOCUS);
+        TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_FOCUS);
     }
     for (unsigned i = 0; i < TEST_REPEAT; i++) {
-        spin_random_delay();
+        // spin_random_delay();
         START_TIMER();
         TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_FOCUS);
         STOP_TIMER();
