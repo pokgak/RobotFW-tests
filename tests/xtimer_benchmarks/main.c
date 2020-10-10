@@ -456,7 +456,9 @@ int sleep_jitter_cmd(int argc, char **argv)
     uint32_t last_wakeup = ztimer_now(ZTIMER_CLOCK);
 #endif
 
-    TIMER_PERIODIC_WAKEUP(&last_wakeup, 2 * JITTER_FOCUS);
+    for (unsigned i = 0; i < 5; i++) {
+        TIMER_PERIODIC_WAKEUP(&last_wakeup, 2 * JITTER_FOCUS);
+    }
     for (unsigned i = 0; i < TEST_REPEAT; i++) {
         spin_random_delay();
         START_TIMER();
