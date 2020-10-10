@@ -56,7 +56,7 @@ class DutDeviceIf(DutShell):
 
     def sleep_jitter(self, bg_timers, divisor=1):
         """Run the sleep jitter benchmark"""
-        return self.cmd_extended_timeout("sleep_jitter {} {}".format(bg_timers, divisor), 30)
+        return self.cmd_extended_timeout("sleep_jitter {} {}".format(bg_timers, divisor), 45)
 
     def drift(self, duration):
         """Run the drift simple benchmark"""
