@@ -127,7 +127,7 @@ class FigurePlotter:
         df.drop(drop, inplace=True)
 
         df["sleep_duration_target_diff"] = df["sleep_duration"] - (
-            [0.2] * len(df["sleep_duration"])
+            [0.05] * len(df["sleep_duration"])
         )
 
         df["sleep_duration_percentage"] = (df["sleep_duration"] / 0.100) * 100
