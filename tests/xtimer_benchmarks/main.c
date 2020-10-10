@@ -451,19 +451,19 @@ int sleep_jitter_cmd(int argc, char **argv)
 
     /* now start the timer that we gonna record */
 #ifndef MODULE_ZTIMER
-    xtimer_ticks32_t now = xtimer_now();
+    xtimer_ticks32_t last_wakeup = xtimer_now();
 #else
-    uint32_t now = ztimer_now(ZTIMER_CLOCK);
+    uint32_t last_wakeup = ztimer_now(ZTIMER_CLOCK);
 #endif
 
     for (unsigned i = 0; i < TEST_REPEAT; i++) {
         if (i == 0) {
-            TIMER_PERIODIC_WAKEUP(&now, 1 * US_PER_SEC);
+            TIMER_PERIODIC_WAKEUP(&last_wakeup, 1 * US_PER_SEC);
         }
-        START_TIMER();
-        TIMER_PERIODIC_WAKEUP(&now, JITTER_FOCUS);
-        STOP_TIMER();
         spin_random_delay();
+        START_TIMER();
+        TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_FOCUS);
+        STOP_TIMER();
     }
     DEBUG("\n");
 
