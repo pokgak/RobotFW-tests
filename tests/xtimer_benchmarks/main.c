@@ -455,13 +455,15 @@ int sleep_jitter_cmd(int argc, char **argv)
 #else
     uint32_t now = ztimer_now(ZTIMER_CLOCK);
 #endif
-    TIMER_PERIODIC_WAKEUP(&now, 1 * US_PER_SEC);
 
     for (unsigned i = 0; i < TEST_REPEAT; i++) {
+        if (i == 0) {
+            TIMER_PERIODIC_WAKEUP(&now, 1 * US_PER_SEC);
+        }
         START_TIMER();
         TIMER_PERIODIC_WAKEUP(&now, JITTER_FOCUS);
         STOP_TIMER();
-        DEBUG("FOCUS TIMER WOKE UP\n");
+        spin_random_delay();
     }
     DEBUG("\n");
 
