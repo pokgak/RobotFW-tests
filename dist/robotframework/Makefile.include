@@ -23,8 +23,8 @@ $(RFOUTPATH)/output.xml: $(ROBOT_TESTDIR)
 				$@
 	-python3 $(TESTBASE)/dist/tools/plot/plot_timer_benchmarks.py \
 				--outdir $(RFOUTPATH)/includes \
-				--for-ci \
 				$(RFOUTPATH)/xunit.xml
+				# --for-ci \
 
 # RF make targets
 robot-test: $(RFOUTPATH)/output.xml
