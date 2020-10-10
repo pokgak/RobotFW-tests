@@ -122,7 +122,7 @@ class FigurePlotter:
             return
 
         drop = df[
-                (df["timer_count"] > 30) | (df["timer_count"] < 5)
+                (df["timer_count"] > 30) | (df["timer_count"] < 0)
             ].index
         df.drop(drop, inplace=True)
 
