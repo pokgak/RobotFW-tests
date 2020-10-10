@@ -393,12 +393,10 @@ static volatile bool jitter_end;
 
 void cleanup_jitter(unsigned bg_timers)
 {
-    TIMER_SLEEP(2);
-
     for (unsigned i = 0; i < bg_timers; ++i) {
-        TIMER_REMOVE(jitter_params->timer);
-        jitter_params->timer = NULL;
-        jitter_params->duration = 0;
+        TIMER_REMOVE(jitter_params[i].timer);
+        jitter_params[i].timer = NULL;
+        jitter_params[i].duration = 0;
     }
 }
 
