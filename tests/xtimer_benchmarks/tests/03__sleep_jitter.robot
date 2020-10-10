@@ -13,7 +13,7 @@ Test Setup     Run Keywords
 ...            API Sync Shell
 Test Template    Measure Sleep Jitter
 
-# Force Tags  dev
+Force Tags  dev
 
 *** Keywords ***
 Measure Sleep Jitter
@@ -32,7 +32,14 @@ Measure Sleep Jitter
 
 *** Test Cases ***    BG TIMERS
 0 BG Timer            0
+5 BG Timer            5
+10 BG Timer           10
+15 BG Timer           15
+20 BG Timer           20
 25 BG Timers          25
+30 BG Timers          30
+35 BG Timers          35
+40 BG Timers          40
 50 BG Timers          50
 75 BG Timers          75
 100 BG Timers         100
