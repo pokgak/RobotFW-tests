@@ -121,15 +121,21 @@ class FigurePlotter:
         if df.empty:
             return
 
-        drop = df[(df["timer_count"] > 20) | (df["timer_count"] < 5)].index
+        drop = df[
+                (df["timer_count"] > 30) | (df["timer_count"] < 0)
+            ].index
         df.drop(drop, inplace=True)
+
+        df["sleep_duration_target_diff"] = df["sleep_duration"] - (
+            [0.1] * len(df["sleep_duration"])
+        )
 
         df["sleep_duration_percentage"] = (df["sleep_duration"] / 0.100) * 100
 
         fig = px.violin(
             df[df["divisor"].isnull()],
             x="timer_count",
-            y="sleep_duration",
+            y="sleep_duration_target_diff",
             color="timer_count",
             points="all",
         )
