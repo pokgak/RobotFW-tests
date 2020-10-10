@@ -384,7 +384,7 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
 #define JITTER_FOCUS (100 * MS_PER_SEC) /* which interval result to record */
 
 struct sleep_jitter_params {
-    TIMER_T timer;
+    TIMER_T *timer;
     uint32_t duration;
 } sleep_jitter_params_t;
 
@@ -394,7 +394,7 @@ static volatile bool jitter_end;
 void cleanup_jitter(void)
 {
     for (unsigned i = 0; i < TEST_MAX_TIMERS; ++i) {
-        TIMER_REMOVE(&jitter_params->timer);
+        TIMER_REMOVE(jitter_params->timer);
     }
 }
 
@@ -402,7 +402,7 @@ static void _sleep_jitter_cb(void *arg)
 {
     if (!jitter_end) {
         struct sleep_jitter_params *params = (struct sleep_jitter_params *)arg;
-        TIMER_SET(&params->timer, params->duration);
+        TIMER_SET(params->timer, params->duration);
     }
 }
 
@@ -435,13 +435,14 @@ int sleep_jitter_cmd(int argc, char **argv)
 
     /* setup the background timers, if any */
     for (unsigned i = 0; i < bg_timers; i++) {
+        jitter_params[i].timer = &test_timers[i];
         jitter_params[i].duration = random_uint32_range(
             JITTER_MIN_OFFSET  * MS_PER_SEC,
             (JITTER_MAX_OFFSET + 1) * MS_PER_SEC) / divisor;
         sprintf(printbuf, "%" PRIu32 "", (uint32_t)jitter_params[i].duration);
         print_data_dict_str(PARSER_DEV_NUM, "interval", printbuf);
 
-        TIMER_T *timer = &jitter_params[i].timer;
+        TIMER_T *timer = jitter_params[i].timer;
         timer->callback = _sleep_jitter_cb;
         timer->arg = &jitter_params[i];
         TIMER_SET(timer, jitter_params[i].duration);
@@ -453,7 +454,8 @@ int sleep_jitter_cmd(int argc, char **argv)
 #else
     uint32_t now = ztimer_now(ZTIMER_CLOCK);
 #endif
-    TIMER_PERIODIC_WAKEUP(&now, 1 * US_PER_SEC);
+    TIMER_PERIODIC_WAKEUP(&now, 3 * US_PER_SEC);
+
     for (unsigned i = 0; i < TEST_REPEAT; i++) {
         START_TIMER();
         TIMER_PERIODIC_WAKEUP(&now, JITTER_FOCUS);
