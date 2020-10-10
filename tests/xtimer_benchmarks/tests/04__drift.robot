@@ -12,8 +12,6 @@ Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
 
-Force Tags  dev
-
 *** Keywords ***
 Measure Drift
     [Documentation]            Run the drift simple benchmark
