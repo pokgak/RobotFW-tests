@@ -395,8 +395,6 @@ void cleanup_jitter(unsigned bg_timers)
 {
     for (unsigned i = 0; i < bg_timers; ++i) {
         TIMER_REMOVE(jitter_params[i].timer);
-        jitter_params[i].timer = NULL;
-        jitter_params[i].duration = 0;
     }
 }
 
@@ -456,7 +454,7 @@ int sleep_jitter_cmd(int argc, char **argv)
 #else
     uint32_t now = ztimer_now(ZTIMER_CLOCK);
 #endif
-    TIMER_PERIODIC_WAKEUP(&now, 3 * US_PER_SEC);
+    TIMER_PERIODIC_WAKEUP(&now, 1 * US_PER_SEC);
 
     for (unsigned i = 0; i < TEST_REPEAT; i++) {
         START_TIMER();
