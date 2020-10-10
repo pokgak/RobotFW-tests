@@ -41,8 +41,8 @@ Measure Sleep Jitter
 35 BG Timers          35
 40 BG Timers          40
 50 BG Timers          50
-75 BG Timers          75
-100 BG Timers         100
+# 75 BG Timers          75
+# 100 BG Timers         100
 
 
 

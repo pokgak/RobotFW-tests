@@ -110,7 +110,7 @@ class FigurePlotter:
             )
 
             df["sleep_duration"].extend(traces)
-            df["timer_count"].extend([str(timer_count)] * len(traces))
+            df["timer_count"].extend([int(timer_count)] * len(traces))
             if "Divisor" in testcase.get("name"):
                 df["divisor"].extend([divisor] * len(traces))
             else:
@@ -121,19 +121,22 @@ class FigurePlotter:
         if df.empty:
             return
 
+        drop = df[(df["timer_count"] > 20) | (df["timer_count"] < 5)].index
+        df.drop(drop, inplace=True)
+
         df["sleep_duration_percentage"] = (df["sleep_duration"] / 0.100) * 100
 
         fig = px.violin(
             df[df["divisor"].isnull()],
             x="timer_count",
-            y="sleep_duration_percentage",
+            y="sleep_duration",
             color="timer_count",
             points="all",
         )
 
         fig.update_layout(
             title="Jitter of periodic 100ms sleep with increasing nr. of background timer",
-            yaxis_title="Actual Sleep Duration / 100ms [%]",
+            yaxis_title="Actual Sleep Duration[%]",
             xaxis_title="Nr. of background timers",
             legend_orientation="h",
         )
