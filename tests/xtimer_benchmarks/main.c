@@ -457,9 +457,9 @@ int sleep_jitter_cmd(int argc, char **argv)
 #endif
 
     for (unsigned i = 0; i < TEST_REPEAT; i++) {
-        if (i == 0) {
-            TIMER_PERIODIC_WAKEUP(&now, 1 * US_PER_SEC);
-        }
+        // if (i == 0) {
+        //     TIMER_PERIODIC_WAKEUP(&now, 1 * US_PER_SEC);
+        // }
         START_TIMER();
         TIMER_PERIODIC_WAKEUP(&now, JITTER_FOCUS);
         STOP_TIMER();
