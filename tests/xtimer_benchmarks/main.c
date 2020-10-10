@@ -381,7 +381,7 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
 
 #define JITTER_MIN_OFFSET   (10U)
 #define JITTER_MAX_OFFSET   (100U)
-#define JITTER_FOCUS (50 * MS_PER_SEC) /* which interval result to record */
+#define JITTER_FOCUS (100 * MS_PER_SEC) /* which interval result to record */
 
 struct sleep_jitter_params {
     TIMER_T *timer;
