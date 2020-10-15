@@ -453,7 +453,9 @@ int sleep_jitter_cmd(int argc, char **argv)
     }
 
     uint32_t bg_timers[bg_timer_count];
-    linspace(bg_timer_count, bg_timers);
+    if (bg_timer_count > 0) {
+        linspace(bg_timer_count, bg_timers);
+    }
 
     /* setup the background timers, if any */
     for (unsigned i = 0; i < bg_timer_count; i++) {

@@ -22,7 +22,7 @@ Measure Sleep Jitter
 
     API Call Should Succeed    Sleep Jitter                 ${bg_timer_count}
     ${RESULT}=                 DutDeviceIf.Compress Result  ${RESULT['data']}
-    ${interval}=               Evaluate                     $RESULT.get('interval', [])
+    ${intervals}=               Evaluate                     $RESULT.get('interval', [])
     Record Property            intervals                    ${intervals}
     API Call Should Succeed    PHILIP.Read Trace
     ${FILTERED}=               DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select_vals=FALLING    data_keys=diff
