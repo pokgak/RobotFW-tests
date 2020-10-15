@@ -121,10 +121,10 @@ class FigurePlotter:
         if df.empty:
             return
 
-        drop = df[
-                (df["timer_count"] > 30) | (df["timer_count"] < 5)
-            ].index
-        df.drop(drop, inplace=True)
+        # drop = df[
+        #         (df["timer_count"] > 30) | (df["timer_count"] < 0)
+        #     ].index
+        # df.drop(drop, inplace=True)
 
         df["sleep_duration_target_diff"] = df["sleep_duration"] - (
             [0.1] * len(df["sleep_duration"])

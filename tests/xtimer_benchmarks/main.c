@@ -379,69 +379,86 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
 * JITTER
 ************************/
 
-#define JITTER_MIN_OFFSET   (10U)
-#define JITTER_MAX_OFFSET   (100U)
 #define JITTER_FOCUS (100 * MS_PER_SEC) /* which interval result to record */
 
-struct sleep_jitter_params {
+void linspace(size_t num, uint32_t *arr)
+{
+    uint32_t step;
+
+    /* bg timer steps as returned by
+       numpy.linspace(10000, 100000, dtype=int, retstep=True, num=X),
+       where X is 5, 10, 15, 20, 25 */
+    switch (num) {
+    case 5: step = 2250; break;
+    case 10: step = 10000; break;
+    case 15: step = 6428; break;
+    case 20: step = 4736; break;
+    case 25: step = 3750; break;
+    default:
+        puts("ERROR num unkonwon");
+        return;
+    }
+    for (unsigned i = 0; i < num; ++i) {
+        *(arr + i) = 10000 + (i * step);
+        sprintf(printbuf, "%" PRIu32 "", arr[i]);
+        print_data_dict_str(PARSER_DEV_NUM, "interval", printbuf);
+    }
+}
+
+typedef struct sleep_jitter_params {
     TIMER_T *timer;
     uint32_t duration;
-} sleep_jitter_params_t;
+} jitter_params_t;
 
-static struct sleep_jitter_params jitter_params[TEST_MAX_TIMERS];
 static volatile bool jitter_end;
 
-void cleanup_jitter(unsigned bg_timers)
+void cleanup_jitter(unsigned count, jitter_params_t *params)
 {
     TIMER_SLEEP(3);
-    for (unsigned i = 0; i < bg_timers; ++i) {
-        TIMER_REMOVE(jitter_params[i].timer);
+    for (unsigned i = 0; i < count; ++i) {
+        TIMER_REMOVE(params[i].timer);
     }
 }
 
 static void _sleep_jitter_cb(void *arg)
 {
     if (!jitter_end) {
-        struct sleep_jitter_params *params = (struct sleep_jitter_params *)arg;
+        jitter_params_t *params = (jitter_params_t *)arg;
         TIMER_SET(params->timer, params->duration);
     }
 }
 
 int sleep_jitter_cmd(int argc, char **argv)
 {
-    print_cmd(PARSER_DEV_NUM, "sleep_jitter");
-
-    if (argc < 3) {
+    if (argc < 2) {
         print_data_str(PARSER_DEV_NUM, "Not enough arguments");
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
         return -1;
     }
 
-    jitter_end = false;
-    unsigned bg_timers = atoi(argv[1]);     /* no. of timers to run in background */
-    unsigned divisor = atoi(argv[2]);       /* background timer divisor */
-    DEBUG("divisor: %u; bg_timers: %u\n", divisor, bg_timers);
+    print_cmd(PARSER_DEV_NUM, "sleep_jitter");
 
-    if (bg_timers > ARRAY_SIZE(jitter_params)) {
+    jitter_end = false;
+
+    sprintf(printbuf, "%lu", JITTER_FOCUS);
+    print_data_dict_str(PARSER_DEV_NUM, "focus", printbuf);
+
+    unsigned bg_timer_count = atoi(argv[1]);
+    jitter_params_t jitter_params[bg_timer_count];
+    if (bg_timer_count > ARRAY_SIZE(jitter_params)) {
         print_data_str(PARSER_DEV_NUM,
                        "bg_timers exceeded allocated jitter_params");
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
         return -1;
     }
 
-    sprintf(printbuf, "%lu", JITTER_FOCUS);
-    print_data_dict_str(PARSER_DEV_NUM, "focus", printbuf);
-
-    DEBUG("size jitter_params: %d\n", ARRAY_SIZE(jitter_params));
+    uint32_t bg_timers[bg_timer_count];
+    linspace(bg_timer_count, bg_timers);
 
     /* setup the background timers, if any */
-    for (unsigned i = 0; i < bg_timers; i++) {
+    for (unsigned i = 0; i < bg_timer_count; i++) {
         jitter_params[i].timer = &test_timers[i];
-        jitter_params[i].duration = random_uint32_range(
-            JITTER_MIN_OFFSET  * MS_PER_SEC,
-            (JITTER_MAX_OFFSET + 1) * MS_PER_SEC) / divisor;
-        sprintf(printbuf, "%" PRIu32 "", (uint32_t)jitter_params[i].duration);
-        print_data_dict_str(PARSER_DEV_NUM, "interval", printbuf);
+        jitter_params[i].duration = bg_timers[i];
 
         TIMER_T *timer = jitter_params[i].timer;
         timer->callback = _sleep_jitter_cb;
@@ -470,7 +487,7 @@ int sleep_jitter_cmd(int argc, char **argv)
 
     jitter_end = true;
 
-    cleanup_jitter(bg_timers);
+    cleanup_jitter(bg_timer_count, jitter_params);
 
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
     return 0;
