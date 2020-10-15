@@ -93,7 +93,7 @@ class FigurePlotter:
         )
 
     def plot_jitter(self, filename):
-        df = {"timer_count": [], "sleep_duration": [], "divisor": []}
+        df = {"timer_count": [], "sleep_duration": []}
         for testcase in self.root.findall(
             f"testcase[@classname='tests_{self.timer_version}_benchmarks.Sleep Jitter']"
         ):
@@ -102,20 +102,12 @@ class FigurePlotter:
                     testcase.find("properties/property[@name='intervals']").get("value")
                 )
             )
-            divisor = literal_eval(
-                testcase.find("properties/property[@name='divisor']").get("value")
-            )
             traces = literal_eval(
                 testcase.find("properties/property[@name='trace']").get("value")
             )
 
             df["sleep_duration"].extend(traces)
             df["timer_count"].extend([int(timer_count)] * len(traces))
-            if "Divisor" in testcase.get("name"):
-                df["divisor"].extend([divisor] * len(traces))
-            else:
-                # divisor None means = 1, not used when varying timer count
-                df["divisor"].extend([None] * len(traces))
 
         df = pd.DataFrame(df)
         if df.empty:
@@ -130,10 +122,8 @@ class FigurePlotter:
             [0.1] * len(df["sleep_duration"])
         )
 
-        df["sleep_duration_percentage"] = (df["sleep_duration"] / 0.100) * 100
-
         fig = px.violin(
-            df[df["divisor"].isnull()],
+            df,
             x="timer_count",
             y="sleep_duration_target_diff",
             color="timer_count",
