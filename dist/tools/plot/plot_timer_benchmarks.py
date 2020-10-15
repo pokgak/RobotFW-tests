@@ -113,10 +113,8 @@ class FigurePlotter:
         if df.empty:
             return
 
-        # drop = df[
-        #         (df["timer_count"] > 30) | (df["timer_count"] < 0)
-        #     ].index
-        # df.drop(drop, inplace=True)
+        drop = df[df["timer_count"] == 0].index
+        df.drop(drop, inplace=True)
 
         df["sleep_duration_target_diff"] = df["sleep_duration"] - (
             [0.1] * len(df["sleep_duration"])
@@ -126,21 +124,25 @@ class FigurePlotter:
             df,
             x="timer_count",
             y="sleep_duration_target_diff",
-            color="timer_count",
+            # color="timer_count",
             # points="all",
         )
 
         fig.update_layout(
-            title="Jitter of periodic 100ms sleep with increasing nr. of background timer",
+            # title="Jitter of periodic 100ms sleep with increasing nr. of background timer",
             yaxis_title="Actual Sleep Duration[s]",
             xaxis_title="Nr. of background timers",
             legend_orientation="h",
         )
 
         fig.write_html(
-            "{}/{}".format(self.outdir, filename),
+            "{}/{}.html".format(self.outdir, filename),
             full_html=self.full_html,
             include_plotlyjs=self.plotlyjs,
+        )
+
+        fig.write_image(
+            "{}/{}.pdf".format(self.outdir, filename),
         )
 
     def get_drift_df(self):
@@ -316,4 +318,4 @@ if __name__ == "__main__":
     plotter = FigurePlotter(args.input, args.outdir, args.for_ci)
     plotter.plot_overhead("overhead.html")
     plotter.plot_accuracy("accuracy.html")
-    plotter.plot_jitter("jitter.html")
+    plotter.plot_jitter("jitter")
