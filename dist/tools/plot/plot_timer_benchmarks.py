@@ -12,9 +12,10 @@ import plotly.graph_objects as go
 
 
 class FigurePlotter:
-    def __init__(self, input, outdir, ci_build):
+    def __init__(self, input, outdir, ci_build, board):
         self.root = ET.parse(input).getroot()
         self.outdir = outdir
+        self.board = board
         if ci_build:
             self.plotlyjs = False
             self.full_html = False
@@ -132,7 +133,8 @@ class FigurePlotter:
             # title="Jitter of periodic 100ms sleep with increasing nr. of background timer",
             yaxis_title="Actual Sleep Duration[s]",
             xaxis_title="Nr. of background timers",
-            legend_orientation="h",
+            showlegend=False,
+            # legend_orientation="h",
         )
 
         fig.write_html(
@@ -142,7 +144,7 @@ class FigurePlotter:
         )
 
         fig.write_image(
-            "{}/{}.pdf".format(self.outdir, filename),
+            "{}/{}_{}.pdf".format(self.outdir, self.board, filename),
         )
 
     def get_drift_df(self):
@@ -305,6 +307,9 @@ if __name__ == "__main__":
         "--outdir", help="output directory to write plots to", default="."
     )
     parser.add_argument(
+        "--board", help="specify board", required=True,
+    )
+    parser.add_argument(
         "--for-ci",
         help="configure output for ci (this will exclude plotly.js from output files)",
         action="store_true",
@@ -315,7 +320,7 @@ if __name__ == "__main__":
     if not os.path.exists(args.outdir):
         os.makedirs(args.outdir)
 
-    plotter = FigurePlotter(args.input, args.outdir, args.for_ci)
+    plotter = FigurePlotter(args.input, args.outdir, args.for_ci, args.board)
     plotter.plot_overhead("overhead.html")
     plotter.plot_accuracy("accuracy.html")
     plotter.plot_jitter("jitter")
