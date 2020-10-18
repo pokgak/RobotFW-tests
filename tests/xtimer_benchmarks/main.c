@@ -514,8 +514,8 @@ int drift_cmd(int argc, char **argv)
     uint32_t start = TIMER_NOW();
     START_TIMER();
     TIMER_SLEEP(duration);
-    uint32_t diff = TIMER_NOW() - start;
     STOP_TIMER();
+    uint32_t diff = TIMER_NOW() - start;
 
     uint32_t us = diff % US_PER_SEC;
     uint32_t sec = diff / US_PER_SEC;
