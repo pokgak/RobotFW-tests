@@ -130,6 +130,7 @@ int overhead_gpio_cmd(int argc, char **argv)
     sprintf(printbuf, "gpio overhead");
     print_cmd(PARSER_DEV_NUM, printbuf);
     for (int i = 0; i < TEST_REPEAT; i++) {
+        spin_random_delay();
         START_TIMER();
         STOP_TIMER();
         spin_random_delay();
