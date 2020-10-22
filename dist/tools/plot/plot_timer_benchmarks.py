@@ -80,17 +80,21 @@ class FigurePlotter:
 
         fig.update_layout(
             dict(
-                title="Sleep Accuracy",
+                title=f"{self.board}-{self.timer_version}",
                 xaxis_title="Target Sleep Duration (s)",
                 yaxis_title="Difference Actual - Target Sleep Duration (s)",
             ),
             legend_orientation="h",
         )
 
-        fig.write_html(
-            "{}/{}".format(self.outdir, filename),
-            full_html=self.full_html,
-            include_plotlyjs=self.plotlyjs,
+        # fig.write_html(
+        #     "{}/{}".format(self.outdir, filename),
+        #     full_html=self.full_html,
+        #     include_plotlyjs=self.plotlyjs,
+        # )
+
+        fig.write_image(
+            "{}/{}_{}.pdf".format(self.outdir, self.board, filename),
         )
 
     def plot_jitter(self, filename):
@@ -131,17 +135,18 @@ class FigurePlotter:
 
         fig.update_layout(
             # title="Jitter of periodic 100ms sleep with increasing nr. of background timer",
+            title=f"{self.board}-{self.timer_version}",
             yaxis_title="Actual Sleep Duration[s]",
             xaxis_title="Nr. of background timers",
             showlegend=False,
             # legend_orientation="h",
         )
 
-        fig.write_html(
-            "{}/{}.html".format(self.outdir, filename),
-            full_html=self.full_html,
-            include_plotlyjs=self.plotlyjs,
-        )
+        # fig.write_html(
+        #     "{}/{}.html".format(self.outdir, filename),
+        #     full_html=self.full_html,
+        #     include_plotlyjs=self.plotlyjs,
+        # )
 
         fig.write_image(
             "{}/{}_{}.pdf".format(self.outdir, self.board, filename),
@@ -209,10 +214,14 @@ class FigurePlotter:
             )
         )
 
-        fig.write_html(
-            "{}/{}".format(self.outdir, filename),
-            full_html=self.full_html,
-            include_plotlyjs=self.plotlyjs,
+        # fig.write_html(
+        #     "{}/{}".format(self.outdir, filename),
+        #     full_html=self.full_html,
+        #     include_plotlyjs=self.plotlyjs,
+        # )
+
+        fig.write_image(
+            "{}/{}_{}.pdf".format(self.outdir, self.board, filename),
         )
 
     def plot_drift_percentage(self, filename):
@@ -322,5 +331,5 @@ if __name__ == "__main__":
 
     plotter = FigurePlotter(args.input, args.outdir, args.for_ci, args.board)
     plotter.plot_overhead("overhead.html")
-    plotter.plot_accuracy("accuracy.html")
+    plotter.plot_accuracy("accuracy")
     plotter.plot_jitter("jitter")
