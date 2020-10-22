@@ -40,7 +40,7 @@ class DutDeviceIf(DutShell):
 
     def sleep_accuracy_timer_sleep(self, duration):
         """Run the sleep accuracy benchmark"""
-        return self.cmd_extended_timeout("sleep_accuracy_timer_sleep {}".format(duration), 30)
+        return self.cmd_extended_timeout("sleep_accuracy_timer_sleep {}".format(duration), 45)
 
     def sleep_accuracy_timer_set(self, duration):
         """Run the sleep accuracy benchmark"""
