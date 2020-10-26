@@ -448,7 +448,6 @@ int sleep_jitter_cmd(int argc, char **argv)
 
     /* setup the background timers, if any */
     for (unsigned i = 0; i < bg_timer_count; i++) {
-        printf("setup timer %u ...", i);
         jitter_params[i].timer = &test_timers[i];
         jitter_params[i].duration = bg_timers[i];
 
@@ -456,7 +455,6 @@ int sleep_jitter_cmd(int argc, char **argv)
         timer->callback = _sleep_jitter_cb;
         timer->arg = &jitter_params[i];
         TIMER_SET(timer, jitter_params[i].duration);
-        printf("done\n");
     }
 
     /* now start the timer that we gonna record */
@@ -466,7 +464,6 @@ int sleep_jitter_cmd(int argc, char **argv)
     uint32_t last_wakeup = ztimer_now(ZTIMER_CLOCK);
 #endif
 
-    puts("start test");
     for (unsigned i = 0; i < 5; i++) {
         TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_FOCUS);
     }
@@ -481,7 +478,6 @@ int sleep_jitter_cmd(int argc, char **argv)
 
     jitter_end = true;
 
-    puts("finished, cleaning up bg timers");
     cleanup_jitter(bg_timer_count, jitter_params);
 
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
