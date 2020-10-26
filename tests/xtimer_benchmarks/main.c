@@ -381,25 +381,13 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
 ************************/
 
 #define JITTER_FOCUS (100 * MS_PER_SEC) /* which interval result to record */
+#define JITTER_INTERVAL_MIN  (10000)
+#define JITTER_INTERVAL_MAX  (100000)
 
-void linspace(size_t num, uint32_t *arr)
+void linspace(size_t count, uint32_t *arr)
 {
-    uint32_t step;
-
-    /* bg timer steps as returned by
-       numpy.linspace(10000, 100000, dtype=int, retstep=True, num=X),
-       where X is 5, 10, 15, 20, 25 */
-    switch (num) {
-    case 5: step = 2250; break;
-    case 10: step = 10000; break;
-    case 15: step = 6428; break;
-    case 20: step = 4736; break;
-    case 25: step = 3750; break;
-    default:
-        puts("ERROR num unkonwon");
-        return;
-    }
-    for (unsigned i = 0; i < num; ++i) {
+    uint32_t step = (JITTER_INTERVAL_MAX - JITTER_INTERVAL_MIN) / count;
+    for (unsigned i = 0; i < count; ++i) {
         *(arr + i) = 10000 + (i * step);
         sprintf(printbuf, "%" PRIu32 "", arr[i]);
         print_data_dict_str(PARSER_DEV_NUM, "interval", printbuf);
