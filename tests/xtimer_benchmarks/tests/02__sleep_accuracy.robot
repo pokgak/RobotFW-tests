@@ -12,6 +12,8 @@ Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
 
+# Force Tags  dev
+
 *** Keywords ***
 Measure Sleep Accuracy with ${type} for ${duration}
     [Documentation]            Sleep for specified duration in microseconds (us)
