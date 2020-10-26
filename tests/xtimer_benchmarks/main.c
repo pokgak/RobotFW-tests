@@ -403,7 +403,7 @@ static volatile bool jitter_end;
 
 void cleanup_jitter(unsigned count, jitter_params_t *params)
 {
-    TIMER_SLEEP(3);
+    TIMER_SLEEP(1 * US_PER_SEC);
     for (unsigned i = 0; i < count; ++i) {
         TIMER_REMOVE(params[i].timer);
     }
@@ -448,7 +448,7 @@ int sleep_jitter_cmd(int argc, char **argv)
 
     /* setup the background timers, if any */
     for (unsigned i = 0; i < bg_timer_count; i++) {
-        printf("setup timer 1...");
+        printf("setup timer %u ...", i);
         jitter_params[i].timer = &test_timers[i];
         jitter_params[i].duration = bg_timers[i];
 
