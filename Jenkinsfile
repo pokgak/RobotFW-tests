@@ -469,16 +469,17 @@ def getTestsFromDir() {
 /* Iterates through each board in nodeBoards and test in nodeTests and builds. */
 def stepBuildJobs() {
     script {
-        for (int t_idx=0; t_idx < nodeTests.size(); t_idx++) {
-            for (int b_idx=0; b_idx < nodeBoards.size(); b_idx++) {
-                buildJob(nodeBoards[b_idx], nodeTests[t_idx])
+        catchError(buildResult: 'UNSTABLE', stageResul: 'FAILURE') {
+            for (int t_idx=0; t_idx < nodeTests.size(); t_idx++) {
+                for (int b_idx=0; b_idx < nodeBoards.size(); b_idx++) {
+                    buildJob(nodeBoards[b_idx], nodeTests[t_idx])
+                }
             }
         }
     }
 }
 
-/* Iterates through each board in nodeBoards and test in nodeTests and builds
- * then stashes successful build binaries.
+/* Build test for board then stashes successful build binaries.
  *
  * For example, if a "board=samr21-xpro" and the test is "tests/periph_gpio",
  * the binaries (.hex, .bin, .elf) will be stashed in
@@ -498,6 +499,10 @@ def buildJob(board, test) {
         stash name: s_name,
                 includes: "${test}/bin/${board}/*.elf,${test}/bin/${board}/*.hex,${test}/bin/${board}/*.bin"
         sh script: "echo stashed ${s_name}", label: "Stashed ${s_name}"
+    }
+    else {
+        sh script: "echo build job  failed: BOARD=${board} TEST=${test} with exit code ${exit_code}", label: "Build job failed"
+        sh script: "exit ${exit_code}"
     }
 }
 
