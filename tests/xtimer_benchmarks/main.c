@@ -40,12 +40,12 @@
 #define PARSER_DEV_NUM 0
 #endif
 
-#define TEST_REPEAT     (50)
-#define TEST_MAX_TIMERS (100)
+#define HIL_TEST_REPEAT     (50)
+#define HIL_MAX_TIMERS      (100)
 
-#define TEST_GPIO           GPIO_PIN(HIL_DUT_IC_PORT, HIL_DUT_IC_PIN)
-#define START_TIMER()       gpio_set(TEST_GPIO)
-#define STOP_TIMER()        gpio_clear(TEST_GPIO)
+#define HIL_TEST_GPIO       GPIO_PIN(HIL_DUT_IC_PORT, HIL_DUT_IC_PIN)
+#define HIL_START_TIMER()   gpio_set(HIL_TEST_GPIO)
+#define HIL_STOP_TIMER()    gpio_clear(HIL_TEST_GPIO)
 
 #ifndef MODULE_ZTIMER
 #include "xtimer.h"
@@ -74,8 +74,8 @@ char printbuf[SHELL_DEFAULT_BUFSIZE] = { 0 };
 uint8_t in_buf[64];
 uint8_t out_buf[64];
 
-uint32_t dut_results[TEST_REPEAT] = { 0 };
-static TIMER_T test_timers[TEST_MAX_TIMERS];
+uint32_t dut_results[HIL_TEST_REPEAT] = { 0 };
+static TIMER_T test_timers[HIL_MAX_TIMERS];
 
 /* Default is whatever, just some small delay if the user forgets to initialize */
 static uint32_t spin_max = 64;
@@ -113,11 +113,11 @@ static unsigned overhead_triggers = 0;
 
 void cleanup_overhead(void)
 {
-    for (unsigned i = 0; i < TEST_REPEAT; ++i) {
+    for (unsigned i = 0; i < HIL_TEST_REPEAT; ++i) {
         dut_results[i] = 0;
     }
 
-    for (unsigned i = 0; i < TEST_MAX_TIMERS; ++i) {
+    for (unsigned i = 0; i < HIL_MAX_TIMERS; ++i) {
         TIMER_REMOVE(&test_timers[i]);
     }
 }
@@ -129,10 +129,10 @@ int overhead_gpio_cmd(int argc, char **argv)
 
     sprintf(printbuf, "gpio overhead");
     print_cmd(PARSER_DEV_NUM, printbuf);
-    for (int i = 0; i < TEST_REPEAT; i++) {
+    for (int i = 0; i < HIL_TEST_REPEAT; i++) {
         spin_random_delay();
-        START_TIMER();
-        STOP_TIMER();
+        HIL_START_TIMER();
+        HIL_STOP_TIMER();
         spin_random_delay();
     }
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
@@ -147,10 +147,10 @@ int overhead_timer_now(int argc, char **argv)
     sprintf(printbuf, "overhead timer now");
     print_cmd(PARSER_DEV_NUM, printbuf);
 
-    for (unsigned i = 0; i < TEST_REPEAT; ++i) {
-        START_TIMER();
+    for (unsigned i = 0; i < HIL_TEST_REPEAT; ++i) {
+        HIL_START_TIMER();
         TIMER_NOW();
-        STOP_TIMER();
+        HIL_STOP_TIMER();
         spin_random_delay();
     }
 
@@ -183,14 +183,14 @@ int timer_overhead_timer_cmd(int argc, char **argv)
     sprintf(printbuf, "timer overhead: %s %s timer", method, pos);
     print_cmd(PARSER_DEV_NUM, printbuf);
 
-    sprintf(printbuf, "%u", TEST_MAX_TIMERS);
+    sprintf(printbuf, "%u", HIL_MAX_TIMERS);
     print_data_dict_str(PARSER_DEV_NUM, "timer count", printbuf);
 
-    sprintf(printbuf, "%u", TEST_REPEAT);
+    sprintf(printbuf, "%u", HIL_TEST_REPEAT);
     print_data_dict_str(PARSER_DEV_NUM, "sample count", printbuf);
 
     /* init the timers */
-    for (unsigned i = 0; i < TEST_MAX_TIMERS; ++i) {
+    for (unsigned i = 0; i < HIL_MAX_TIMERS; ++i) {
         test_timers[i].callback = _overhead_callback;
         test_timers[i].arg = &overhead_triggers;
     }
@@ -200,40 +200,40 @@ int timer_overhead_timer_cmd(int argc, char **argv)
         timer_idx = 0;
     }
     else if (strcmp(pos, "middle") == 0) {
-        timer_idx = (TEST_MAX_TIMERS / 2) - 1;
+        timer_idx = (HIL_MAX_TIMERS / 2) - 1;
     }
     else if (strcmp(pos, "last") == 0) {
-        timer_idx = TEST_MAX_TIMERS - 1;
+        timer_idx = HIL_MAX_TIMERS - 1;
     }
     else {
         goto error;
     }
 
     if (strcmp(method, "set") == 0) {
-        for (unsigned n = 0; n < TEST_REPEAT; ++n) {
+        for (unsigned n = 0; n < HIL_TEST_REPEAT; ++n) {
             /* set all but the last timer */
             for (unsigned i = 0; i < timer_idx; ++i) {
                 TIMER_SET(&test_timers[i], _delay(i));
             }
 
             /* set the last timer */
-            START_TIMER();
+            HIL_START_TIMER();
             TIMER_SET(&test_timers[timer_idx], _delay(timer_idx));
-            STOP_TIMER();
+            HIL_STOP_TIMER();
             spin_random_delay();
         }
     }
     else if (strcmp(method, "remove") == 0) {
-        for (unsigned n = 0; n < TEST_REPEAT; ++n) {
+        for (unsigned n = 0; n < HIL_TEST_REPEAT; ++n) {
             /* set timers until timer_idx */
             for (unsigned i = 0; i <= timer_idx; ++i) {
                 TIMER_SET(&test_timers[i], _delay(i));
             }
 
             /* remove the timer at timer_idx */
-            START_TIMER();
+            HIL_START_TIMER();
             TIMER_REMOVE(&test_timers[timer_idx]);
-            STOP_TIMER();
+            HIL_STOP_TIMER();
             spin_random_delay();
         }
     }
@@ -270,7 +270,7 @@ void _sleep_accuracy_timer_set_cb(void *arg)
         *(params->diff) = TIMER_NOW() - params->start;
     }
     else {
-        STOP_TIMER();
+        HIL_STOP_TIMER();
     }
     params->triggered = true;
 }
@@ -298,7 +298,7 @@ int sleep_accuracy_timer_set_cmd(int argc, char **argv)
     timer.arg = &params;
 
     /* measure using dut timer (xtimer/ztimer) */
-    for (unsigned i = 0; i < TEST_REPEAT; i++) {
+    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
         params.diff = &dut_results[i];
         params.start = TIMER_NOW();
         TIMER_SET(&timer, sleeptime);
@@ -314,8 +314,8 @@ int sleep_accuracy_timer_set_cmd(int argc, char **argv)
     params.triggered = false;
 
     /* measure using PHiLIP */
-    for (unsigned i = 0; i < TEST_REPEAT; i++) {
-        START_TIMER();
+    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
+        HIL_START_TIMER();
         TIMER_SET(&timer, sleeptime);
         while (!params.triggered) {}
         params.triggered = false;
@@ -351,7 +351,7 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
     }
 
     /* measure using dut timer (xtimer/ztimer) */
-    for (unsigned i = 0; i < TEST_REPEAT; i++) {
+    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
         uint32_t start = TIMER_NOW();
         TIMER_SLEEP(sleeptime);
         dut_results[i] = TIMER_NOW() - start;
@@ -359,10 +359,10 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
     }
 
     /* measure using PHiLIP */
-    for (unsigned i = 0; i < TEST_REPEAT; i++) {
-        START_TIMER();
+    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
+        HIL_START_TIMER();
         TIMER_SLEEP(sleeptime);
-        STOP_TIMER();
+        HIL_STOP_TIMER();
         spin_random_delay();
     }
 
@@ -387,6 +387,7 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
 void linspace(size_t count, uint32_t *arr)
 {
     uint32_t step = (JITTER_INTERVAL_MAX - JITTER_INTERVAL_MIN) / count;
+
     for (unsigned i = 0; i < count; ++i) {
         *(arr + i) = 10000 + (i * step);
         sprintf(printbuf, "%" PRIu32 "", arr[i]);
@@ -468,11 +469,11 @@ int sleep_jitter_cmd(int argc, char **argv)
         TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_FOCUS);
     }
 
-    for (unsigned i = 0; i < TEST_REPEAT; i++) {
+    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
         spin_random_delay();
-        START_TIMER();
+        HIL_START_TIMER();
         TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_FOCUS);
-        STOP_TIMER();
+        HIL_STOP_TIMER();
     }
     DEBUG("\n");
 
@@ -501,9 +502,9 @@ int drift_cmd(int argc, char **argv)
     print_cmd(PARSER_DEV_NUM, printbuf);
 
     uint32_t start = TIMER_NOW();
-    START_TIMER();
+    HIL_START_TIMER();
     TIMER_SLEEP(duration);
-    STOP_TIMER();
+    HIL_STOP_TIMER();
     uint32_t diff = TIMER_NOW() - start;
 
     uint32_t us = diff % US_PER_SEC;
@@ -567,7 +568,7 @@ int main(void)
 {
     (void)puts("Welcome to RIOT!");
 
-    gpio_init(TEST_GPIO, GPIO_OUT);
+    gpio_init(HIL_TEST_GPIO, GPIO_OUT);
 
     random_init(0);
 
