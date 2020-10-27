@@ -312,11 +312,11 @@ if __name__ == "__main__":
     )
 
     parser.add_argument("input", help="xunit result file to parse")
+    parser.add_argument("--outdir", help="output directory to write plots to")
     parser.add_argument(
-        "--outdir", help="output directory to write plots to", default="."
-    )
-    parser.add_argument(
-        "--board", help="specify board", required=True,
+        "--board",
+        help="specify board",
+        required=True,
     )
     parser.add_argument(
         "--for-ci",
@@ -326,6 +326,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    args.outdir = (
+        args.outdir
+        if args.outdir
+        else "{:s}/includes".format(args.input[: args.input.rfind("/")])
+    )
     if not os.path.exists(args.outdir):
         os.makedirs(args.outdir)
 
