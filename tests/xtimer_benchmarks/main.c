@@ -365,26 +365,16 @@ static void *main_periodic_timer(void *arg)
 {
     (void)arg;
 
-    // TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
-
 #ifndef MODULE_ZTIMER
-    xtimer_ticks32_t last_wakeup;
+    xtimer_ticks32_t last_wakeup = xtimer_now();
 #else
-    uint32_t last_wakeup;
+    uint32_t last_wakeup = ztimer_now(ZTIMER_CLOCK);
 #endif
 
     for (unsigned i = 0; i < HIL_TEST_REPEAT + 1; i++) {
-        if (i == 0) {
-        #ifndef MODULE_ZTIMER
-            last_wakeup = xtimer_now();
-        #else
-            last_wakeup = ztimer_now(ZTIMER_CLOCK);
-        #endif
-        }
         HIL_START_TIMER();
         TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
         HIL_STOP_TIMER();
-        // spin_random_delay();
     }
 
     jitter_end = true;
@@ -433,10 +423,10 @@ int sleep_jitter_cmd(int argc, char **argv)
     }
 
     /* start the main periodic timer */
-    char jitter_stack[THREAD_STACKSIZE_DEFAULT] = {0};
+    char jitter_stack[512] = { 0 };
     kernel_pid_t pid = thread_create(jitter_stack, sizeof(jitter_stack),
-                THREAD_PRIORITY_MAIN - 1, 0,
-                main_periodic_timer, NULL, "main timer");
+                                     THREAD_PRIORITY_MAIN - 1, 0,
+                                     main_periodic_timer, NULL, "main timer");
     if (pid < 0) {
         print_data_str(PARSER_DEV_NUM, "cannot start main timer");
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
