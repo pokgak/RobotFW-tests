@@ -405,10 +405,10 @@ int sleep_jitter_cmd(int argc, char **argv)
     sprintf(printbuf, "%u", bg_timer_count);
     print_data_dict_str(PARSER_DEV_NUM, "bg-timer-count", printbuf);
 
-    sprintf(printbuf, "%" PRIu32 "", JITTER_MAIN_INTERVAL);
+    sprintf(printbuf, "%lu", JITTER_MAIN_INTERVAL);
     print_data_dict_str(PARSER_DEV_NUM, "main-timer-interval", printbuf);
 
-    sprintf(printbuf, "%" PRIu32 "", JITTER_BG_INTERVAL);
+    sprintf(printbuf, "%lu", JITTER_BG_INTERVAL);
     print_data_dict_str(PARSER_DEV_NUM, "bg-timer-interval", printbuf);
 
     jitter_params_t jitter_params[bg_timer_count];
