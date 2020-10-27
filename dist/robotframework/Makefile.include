@@ -21,9 +21,9 @@ $(RFOUTPATH)/output.xml: $(ROBOT_TESTDIR)
 	python3 $(TESTBASE)/dist/tools/output_to_xunit/output_to_xunit.py \
 				--output $(RFOUTPATH)/xunit.xml \
 				$@
-	# -python3 $(TESTBASE)/dist/tools/plot/plot_timer_benchmarks.py \
-	# 			--outdir $(RFOUTPATH)/includes \
-	# 			$(RFOUTPATH)/xunit.xml
+	-python3 $(TESTBASE)/dist/tools/plot/plot_timer_benchmarks.py \
+				--board $(BOARD) \
+				$(RFOUTPATH)/xunit.xml
 				# --for-ci \
 
 # RF make targets
