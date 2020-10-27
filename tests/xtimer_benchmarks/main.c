@@ -335,27 +335,15 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
 * JITTER
 ************************/
 
-#define JITTER_FOCUS (100 * MS_PER_SEC) /* which interval result to record */
-#define JITTER_INTERVAL_MIN  (10000)
-#define JITTER_INTERVAL_MAX  (100000)
+#define JITTER_MAIN_INTERVAL (100 * MS_PER_SEC)
+#define JITTER_BG_INTERVAL   (20 * MS_PER_SEC)
 
-void linspace(size_t count, uint32_t *arr)
-{
-    uint32_t step = (JITTER_INTERVAL_MAX - JITTER_INTERVAL_MIN) / count;
-
-    for (unsigned i = 0; i < count; ++i) {
-        *(arr + i) = 10000 + (i * step);
-        sprintf(printbuf, "%" PRIu32 "", arr[i]);
-        print_data_dict_str(PARSER_DEV_NUM, "interval", printbuf);
-    }
-}
+static volatile bool jitter_end;
 
 typedef struct sleep_jitter_params {
     TIMER_T *timer;
     uint32_t duration;
 } jitter_params_t;
-
-static volatile bool jitter_end;
 
 void cleanup_jitter(unsigned count, jitter_params_t *params)
 {
@@ -373,6 +361,30 @@ static void _sleep_jitter_cb(void *arg)
     }
 }
 
+static void *main_periodic_timer(void *arg)
+{
+    (void)arg;
+#ifndef MODULE_ZTIMER
+    xtimer_ticks32_t last_wakeup = xtimer_now();
+#else
+    uint32_t last_wakeup = ztimer_now(ZTIMER_CLOCK);
+#endif
+
+    for (unsigned i = 0; i < 5; i++) {
+        TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
+    }
+
+    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
+        spin_random_delay();
+        HIL_START_TIMER();
+        TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
+        HIL_STOP_TIMER();
+    }
+
+    jitter_end = true;
+    return NULL;
+}
+
 int sleep_jitter_cmd(int argc, char **argv)
 {
     if (argc < 2) {
@@ -383,12 +395,16 @@ int sleep_jitter_cmd(int argc, char **argv)
 
     print_cmd(PARSER_DEV_NUM, "sleep_jitter");
 
-    jitter_end = false;
-
-    sprintf(printbuf, "%lu", JITTER_FOCUS);
-    print_data_dict_str(PARSER_DEV_NUM, "focus", printbuf);
-
     unsigned bg_timer_count = atoi(argv[1]);
+    sprintf(printbuf, "%u", bg_timer_count);
+    print_data_dict_str(PARSER_DEV_NUM, "bg-timer-count", printbuf);
+
+    sprintf(printbuf, "%" PRIu32 "", JITTER_MAIN_INTERVAL);
+    print_data_dict_str(PARSER_DEV_NUM, "main-timer-interval", printbuf);
+
+    sprintf(printbuf, "%" PRIu32 "", JITTER_BG_INTERVAL);
+    print_data_dict_str(PARSER_DEV_NUM, "bg-timer-interval", printbuf);
+
     jitter_params_t jitter_params[bg_timer_count];
     if (bg_timer_count > ARRAY_SIZE(jitter_params)) {
         print_data_str(PARSER_DEV_NUM,
@@ -397,15 +413,12 @@ int sleep_jitter_cmd(int argc, char **argv)
         return -1;
     }
 
-    uint32_t bg_timers[bg_timer_count];
-    if (bg_timer_count > 0) {
-        linspace(bg_timer_count, bg_timers);
-    }
+    jitter_end = false;
 
-    /* setup the background timers, if any */
-    for (unsigned i = 0; i < bg_timer_count; i++) {
+    /* setup half of the background timers before the periodic timer */
+    for (unsigned i = 0; i < bg_timer_count / 2; i++) {
         jitter_params[i].timer = &test_timers[i];
-        jitter_params[i].duration = bg_timers[i];
+        jitter_params[i].duration = 20000;
 
         TIMER_T *timer = jitter_params[i].timer;
         timer->callback = _sleep_jitter_cb;
@@ -413,26 +426,29 @@ int sleep_jitter_cmd(int argc, char **argv)
         TIMER_SET(timer, jitter_params[i].duration);
     }
 
-    /* now start the timer that we gonna record */
-#ifndef MODULE_ZTIMER
-    xtimer_ticks32_t last_wakeup = xtimer_now();
-#else
-    uint32_t last_wakeup = ztimer_now(ZTIMER_CLOCK);
-#endif
-
-    for (unsigned i = 0; i < 5; i++) {
-        TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_FOCUS);
+    /* start the main periodic timer */
+    char jitter_stack[THREAD_STACKSIZE_DEFAULT] = {0};
+    kernel_pid_t pid = thread_create(jitter_stack, sizeof(jitter_stack),
+                THREAD_PRIORITY_MAIN - 1, 0,
+                main_periodic_timer, NULL, "main timer");
+    if (pid < 0) {
+        print_data_str(PARSER_DEV_NUM, "cannot start main timer");
+        print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
+        return -1;
     }
 
-    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
-        spin_random_delay();
-        HIL_START_TIMER();
-        TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_FOCUS);
-        HIL_STOP_TIMER();
-    }
-    DEBUG("\n");
+    /* setup rest of the background timers after the periodic timer */
+    for (unsigned i = bg_timer_count / 2; i < bg_timer_count; i++) {
+        jitter_params[i].timer = &test_timers[i];
+        jitter_params[i].duration = JITTER_BG_INTERVAL;
 
-    jitter_end = true;
+        TIMER_T *timer = jitter_params[i].timer;
+        timer->callback = _sleep_jitter_cb;
+        timer->arg = &jitter_params[i];
+        TIMER_SET(timer, jitter_params[i].duration);
+    }
+
+    while (!jitter_end) {}
 
     cleanup_jitter(bg_timer_count, jitter_params);
 

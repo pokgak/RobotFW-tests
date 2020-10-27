@@ -20,10 +20,11 @@ Measure Sleep Jitter
     [Documentation]            Run the sleep jitter benchmark
     [Arguments]                ${bg_timer_count}
 
-    API Call Should Succeed    Sleep Jitter                 ${bg_timer_count}
-    ${RESULT}=                 DutDeviceIf.Compress Result  ${RESULT['data']}
-    ${intervals}=               Evaluate                     $RESULT.get('interval', [])
-    Record Property            intervals                    ${intervals}
+    API Call Should Succeed    Sleep Jitter                     ${bg_timer_count}
+    ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}
+    Record Property            main-timer-interval              ${RESULT['main-timer-interval']}
+    Record Property            bg-timer-interval                ${RESULT['bg-timer-interval']}
+    Record Property            bg-timer-count                   ${RESULT['bg-timer-count']}
     API Call Should Succeed    PHILIP.Read Trace
     ${FILTERED}=               DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select_vals=FALLING    data_keys=diff
     ${RESULT}=                 DutDeviceIf.Compress Result      ${FILTERED}

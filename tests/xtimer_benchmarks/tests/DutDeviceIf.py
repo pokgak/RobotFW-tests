@@ -131,6 +131,6 @@ class DutDeviceIf(DutShell):
                         values.append(literal_eval(e[k]))
                     except ValueError:
                         values.append(e[k])
-            result[k] = values
+            result[k] = values if len(values) > 1 else values[0]
         return result
 

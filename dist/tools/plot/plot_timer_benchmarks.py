@@ -98,45 +98,56 @@ class FigurePlotter:
         )
 
     def plot_jitter(self, filename):
-        df = {"timer_count": [], "sleep_duration": []}
+        df = {"sleep_duration": [], "bg_timer_count": []}
         for testcase in self.root.findall(
             f"testcase[@classname='tests_{self.timer_version}_benchmarks.Sleep Jitter']"
         ):
-            timer_count = len(
-                literal_eval(
-                    testcase.find("properties/property[@name='intervals']").get("value")
+            bg_timer_count = int(
+                testcase.find("properties/property[@name='bg-timer-count']").get("value")
+            )
+            main_timer_interval = int(
+                testcase.find("properties/property[@name='main-timer-interval']").get(
+                    "value"
                 )
             )
+            # bg_timer_interval = int(
+            #     testcase.find("properties/property[@name='bg-timer-interval']").get(
+            #         "value"
+            #     )
+            # )
             traces = literal_eval(
                 testcase.find("properties/property[@name='trace']").get("value")
             )
+            # Philip record in seconds, convert to microseconds
+            traces = [v * 1000000 for v in traces]
 
             df["sleep_duration"].extend(traces)
-            df["timer_count"].extend([int(timer_count)] * len(traces))
+            df["bg_timer_count"].extend([bg_timer_count] * len(traces))
 
         df = pd.DataFrame(df)
         if df.empty:
+            print("Jitter dataframe empty. Aborting..")
             return
 
-        drop = df[df["timer_count"] == 0].index
+        drop = df[df["bg_timer_count"] == 0].index
         df.drop(drop, inplace=True)
 
         df["sleep_duration_target_diff"] = df["sleep_duration"] - (
-            [0.1] * len(df["sleep_duration"])
+            [main_timer_interval] * len(df["sleep_duration"])
         )
 
         fig = px.violin(
             df,
-            x="timer_count",
+            x="bg_timer_count",
             y="sleep_duration_target_diff",
-            # color="timer_count",
+            # color="bg_timer_count",
             # points="all",
         )
 
         fig.update_layout(
             # title="Jitter of periodic 100ms sleep with increasing nr. of background timer",
             title=f"{self.board}-{self.timer_version}",
-            yaxis_title="Actual Sleep Duration[s]",
+            yaxis_title="Difference real - target sleep duration[s]",
             xaxis_title="Nr. of background timers",
             showlegend=False,
             # legend_orientation="h",
