@@ -19,8 +19,6 @@ Measure Sleep Accuracy with ${type} for ${duration}
     [Documentation]            Sleep for specified duration in microseconds (us)
     [Teardown]                 Run Keywords                                         PHILIP Reset
     API Call Should Succeed    Sleep Accuracy                                       ${type}                    ${duration}
-    ${RESULT}=                 DutDeviceIf.Compress Result                          ${RESULT['data']}
-    Record Property            accuracy-${type}-${duration}-dut                     ${RESULT['dut-result']}
     API Call Should Succeed    PHILIP.Read Trace
     ${RESULT}=                 DutDeviceIf.Filter Trace                             trace=${RESULT['data']}    select_vals=FALLING    data_keys=diff
     ${ACCURACY}=               DutDeviceIf.Compress Result                          ${RESULT}

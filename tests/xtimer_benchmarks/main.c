@@ -31,6 +31,7 @@
 #include "sc_args.h"
 #include "random.h"
 #include "timex.h"
+#include "mutex.h"
 
 #define ENABLE_DEBUG (0)
 #include "debug.h"
@@ -256,23 +257,11 @@ error:
 * ACCURACY
 ************************/
 
-typedef struct accuracy_cb_params {
-    volatile bool triggered;    /* volatile avoid loop optimised */
-    uint32_t start;
-    uint32_t *diff;
-} accuracy_params_t;
-
 void _sleep_accuracy_timer_set_cb(void *arg)
 {
-    accuracy_params_t *params = (accuracy_params_t *)arg;
-
-    if (params->start) {
-        *(params->diff) = TIMER_NOW() - params->start;
-    }
-    else {
-        HIL_STOP_TIMER();
-    }
-    params->triggered = true;
+    HIL_STOP_TIMER();
+    mutex_t *mutex = (mutex_t *)arg;
+    mutex_unlock(mutex);
 }
 
 int sleep_accuracy_timer_set_cmd(int argc, char **argv)
@@ -291,44 +280,24 @@ int sleep_accuracy_timer_set_cmd(int argc, char **argv)
     sprintf(printbuf, "sleep_accuracy: timer_sleep(%s)", argv[1]);
     print_cmd(PARSER_DEV_NUM, printbuf);
 
-    accuracy_params_t params = { 0 };
+    mutex_t mutex = MUTEX_INIT_LOCKED;
 
-    TIMER_T timer = { 0 };
-    timer.callback = _sleep_accuracy_timer_set_cb;
-    timer.arg = &params;
-
-    /* measure using dut timer (xtimer/ztimer) */
-    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
-        params.diff = &dut_results[i];
-        params.start = TIMER_NOW();
-        TIMER_SET(&timer, sleeptime);
-        while (!params.triggered) {}
-        params.triggered = false;
-        spin_random_delay();
-    }
-
-    /* reset, we're not using dut timer for measurement anymore */
-    TIMER_REMOVE(&timer);
-    params.start = 0;
-    params.diff = NULL;
-    params.triggered = false;
+    TIMER_T timer = {
+        .callback = _sleep_accuracy_timer_set_cb,
+        .arg = (void *)&mutex,
+    };
 
     /* measure using PHiLIP */
     for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
+        spin_random_delay();
         HIL_START_TIMER();
         TIMER_SET(&timer, sleeptime);
-        while (!params.triggered) {}
-        params.triggered = false;
-        spin_random_delay();
+        mutex_lock(&mutex);
     }
 
+    /* wait for the last timer triggers before exit */
+    mutex_unlock(&mutex);
     TIMER_REMOVE(&timer);
-
-    /* print dut result to shell */
-    for (unsigned i = 0; i < ARRAY_SIZE(dut_results); ++i) {
-        sprintf(printbuf, "%" PRIu32 "", dut_results[i]);
-        print_data_dict_str(PARSER_DEV_NUM, "dut-result", printbuf);
-    }
 
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
     return 0;
@@ -350,26 +319,12 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
         return -1;
     }
 
-    /* measure using dut timer (xtimer/ztimer) */
-    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
-        uint32_t start = TIMER_NOW();
-        TIMER_SLEEP(sleeptime);
-        dut_results[i] = TIMER_NOW() - start;
-        spin_random_delay();
-    }
-
     /* measure using PHiLIP */
     for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
+        spin_random_delay();
         HIL_START_TIMER();
         TIMER_SLEEP(sleeptime);
         HIL_STOP_TIMER();
-        spin_random_delay();
-    }
-
-    /* print dut result to shell */
-    for (unsigned i = 0; i < ARRAY_SIZE(dut_results); ++i) {
-        sprintf(printbuf, "%" PRIu32 "", dut_results[i]);
-        print_data_dict_str(PARSER_DEV_NUM, "dut-result", printbuf);
     }
 
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
