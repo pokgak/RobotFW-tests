@@ -118,6 +118,9 @@ class FigurePlotter:
             traces = literal_eval(
                 testcase.find("properties/property[@name='trace']").get("value")
             )
+            # HACK: we repeat measurement for 51 times and
+            # discard the first measurement as it is most likely 0
+            traces = traces[1:]
             # Philip record in seconds, convert to microseconds
             traces = [v * 1000000 for v in traces]
 
@@ -129,8 +132,7 @@ class FigurePlotter:
             print("Jitter dataframe empty. Aborting..")
             return
 
-        drop = df[df["bg_timer_count"] == 0].index
-        df.drop(drop, inplace=True)
+        df.drop(df[df["bg_timer_count"] > 15].index, inplace=True)
 
         df["sleep_duration_target_diff"] = df["sleep_duration"] - (
             [main_timer_interval] * len(df["sleep_duration"])
@@ -146,11 +148,9 @@ class FigurePlotter:
 
         fig.update_layout(
             # title="Jitter of periodic 100ms sleep with increasing nr. of background timer",
-            title=f"{self.board}-{self.timer_version}",
-            yaxis_title="Difference real - target sleep duration[s]",
+            title=f"{self.board} board with {self.timer_version}",
+            yaxis_title="Difference real - target sleep duration [us]",
             xaxis_title="Nr. of background timers",
-            showlegend=False,
-            # legend_orientation="h",
         )
 
         # fig.write_html(

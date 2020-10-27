@@ -364,21 +364,27 @@ static void _sleep_jitter_cb(void *arg)
 static void *main_periodic_timer(void *arg)
 {
     (void)arg;
+
+    // TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
+
 #ifndef MODULE_ZTIMER
-    xtimer_ticks32_t last_wakeup = xtimer_now();
+    xtimer_ticks32_t last_wakeup;
 #else
-    uint32_t last_wakeup = ztimer_now(ZTIMER_CLOCK);
+    uint32_t last_wakeup;
 #endif
 
-    for (unsigned i = 0; i < 5; i++) {
-        TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
-    }
-
-    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
-        spin_random_delay();
+    for (unsigned i = 0; i < HIL_TEST_REPEAT + 1; i++) {
+        if (i == 0) {
+        #ifndef MODULE_ZTIMER
+            last_wakeup = xtimer_now();
+        #else
+            last_wakeup = ztimer_now(ZTIMER_CLOCK);
+        #endif
+        }
         HIL_START_TIMER();
         TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
         HIL_STOP_TIMER();
+        // spin_random_delay();
     }
 
     jitter_end = true;
