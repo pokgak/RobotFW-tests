@@ -18,7 +18,7 @@ Force Tags     dev
 List Operations
     [Documentation]            Run the list operations benchmark
     [Arguments]                ${count}
-    API Call Should Succeed    Drift        ${duration}
+    API Call Should Succeed    Drift        ${count}
 
     API Call Should Succeed    PHILIP.Read Trace
     ${PHILIP_RES}=             DutDeviceIf.Filter Trace         ${RESULT['data']}    select_vals=FALLING    data_keys=diff
