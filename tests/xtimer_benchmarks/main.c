@@ -334,6 +334,7 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
 #define JITTER_MAIN_INTERVAL (100 * MS_PER_SEC)
 #define JITTER_BG_INTERVAL   (20 * MS_PER_SEC)
 
+static char jitter_stack[512];
 static volatile bool jitter_end;
 
 typedef struct sleep_jitter_params {
@@ -343,6 +344,7 @@ typedef struct sleep_jitter_params {
 
 void cleanup_jitter(unsigned count, jitter_params_t *params)
 {
+    jitter_end = true;
     TIMER_SLEEP(1 * US_PER_SEC);
     for (unsigned i = 0; i < count; ++i) {
         TIMER_REMOVE(params[i].timer);
@@ -359,8 +361,6 @@ static void _sleep_jitter_cb(void *arg)
 
 static void *main_periodic_timer(void *arg)
 {
-    (void)arg;
-
 #ifndef MODULE_ZTIMER
     xtimer_ticks32_t last_wakeup = xtimer_now();
 #else
@@ -373,7 +373,7 @@ static void *main_periodic_timer(void *arg)
         HIL_STOP_TIMER();
     }
 
-    jitter_end = true;
+    mutex_unlock((mutex_t *)arg);
     return NULL;
 }
 
@@ -419,10 +419,11 @@ int sleep_jitter_cmd(int argc, char **argv)
     }
 
     /* start the main periodic timer */
-    char jitter_stack[512] = { 0 };
+    mutex_t mutex = MUTEX_INIT_LOCKED;
     kernel_pid_t pid = thread_create(jitter_stack, sizeof(jitter_stack),
                                      THREAD_PRIORITY_MAIN - 1, 0,
-                                     main_periodic_timer, NULL, "main timer");
+                                     main_periodic_timer, (void *)&mutex,
+                                     "main timer");
     if (pid < 0) {
         print_data_str(PARSER_DEV_NUM, "cannot start main timer");
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
@@ -440,7 +441,7 @@ int sleep_jitter_cmd(int argc, char **argv)
         TIMER_SET(timer, jitter_params[i].duration);
     }
 
-    while (!jitter_end) {}
+    mutex_lock(&mutex);
 
     cleanup_jitter(bg_timer_count, jitter_params);
 
