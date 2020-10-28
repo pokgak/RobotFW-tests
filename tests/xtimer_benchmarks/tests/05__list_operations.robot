@@ -24,12 +24,11 @@ List Operations
     ${PHILIP_RES}=             DutDeviceIf.Filter Trace         ${RESULT['data']}    select_vals=FALLING    data_keys=diff
     ${RESULT}=                 DutDeviceIf.Compress Result      ${PHILIP_RES}
 
-    Record Property            count        ${count}
-    Record Property            trace        ${RESULT['diff']}
+    Record Property            ${count}-timer-trace             ${RESULT['diff']}
 
 *** Test Cases ***
 Measure List Operations
     [Template]  List Operations
-    FOR  ${n}  IN RANGE  1  11
+    FOR  ${n}  IN RANGE  1  51
         ${n}
     END
