@@ -260,8 +260,8 @@ error:
 void _sleep_accuracy_timer_set_cb(void *arg)
 {
     HIL_STOP_TIMER();
-    mutex_t *mutex = (mutex_t *)arg;
-    mutex_unlock(mutex);
+    bool *triggered = (bool *)arg;
+    *triggered = true;
 }
 
 int sleep_accuracy_timer_set_cmd(int argc, char **argv)
@@ -280,24 +280,20 @@ int sleep_accuracy_timer_set_cmd(int argc, char **argv)
     sprintf(printbuf, "sleep_accuracy: timer_sleep(%s)", argv[1]);
     print_cmd(PARSER_DEV_NUM, printbuf);
 
-    mutex_t mutex = MUTEX_INIT_LOCKED;
-
+    volatile bool triggered;
     TIMER_T timer = {
         .callback = _sleep_accuracy_timer_set_cb,
-        .arg = (void *)&mutex,
+        .arg = (void *)&triggered,
     };
 
     /* measure using PHiLIP */
     for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
         spin_random_delay();
+        triggered = false;
         HIL_START_TIMER();
         TIMER_SET(&timer, sleeptime);
-        mutex_lock(&mutex);
+        while (!triggered) {}
     }
-
-    /* wait for the last timer triggers before exit */
-    mutex_unlock(&mutex);
-    TIMER_REMOVE(&timer);
 
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
     return 0;
