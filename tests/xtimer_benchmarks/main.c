@@ -75,7 +75,6 @@ char printbuf[SHELL_DEFAULT_BUFSIZE] = { 0 };
 uint8_t in_buf[64];
 uint8_t out_buf[64];
 
-uint32_t dut_results[HIL_TEST_REPEAT] = { 0 };
 static TIMER_T test_timers[HIL_MAX_TIMERS];
 
 /* Default is whatever, just some small delay if the user forgets to initialize */
@@ -110,14 +109,8 @@ void spin_random_delay(void)
 
 #define OVERHEAD_SPREAD (1000UL)
 
-static unsigned overhead_triggers = 0;
-
 void cleanup_overhead(void)
 {
-    for (unsigned i = 0; i < HIL_TEST_REPEAT; ++i) {
-        dut_results[i] = 0;
-    }
-
     for (unsigned i = 0; i < HIL_MAX_TIMERS; ++i) {
         TIMER_REMOVE(&test_timers[i]);
     }
@@ -161,9 +154,8 @@ int overhead_timer_now(int argc, char **argv)
 
 static void _overhead_callback(void *arg)
 {
-    unsigned *triggers = arg;
-
-    *triggers += 1;
+    (void)arg;
+    expect(false);
 }
 
 uint32_t _delay(unsigned n)
@@ -193,7 +185,6 @@ int timer_overhead_timer_cmd(int argc, char **argv)
     /* init the timers */
     for (unsigned i = 0; i < HIL_MAX_TIMERS; ++i) {
         test_timers[i].callback = _overhead_callback;
-        test_timers[i].arg = &overhead_triggers;
     }
 
     unsigned timer_idx = -1;
@@ -244,8 +235,6 @@ error:
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
         return -1;
     }
-
-    expect(!overhead_triggers);
 
     cleanup_overhead();
 
