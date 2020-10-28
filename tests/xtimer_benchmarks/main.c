@@ -470,6 +470,45 @@ int drift_cmd(int argc, char **argv)
     return 0;
 }
 
+/************************
+* List Operations
+************************/
+
+int list_ops_cmd(int argc, char **argv)
+{
+    if (argc < 2) {
+        print_data_str(PARSER_DEV_NUM, "Not enough arguments");
+        print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
+        return -1;
+    }
+
+    int count = atoi(argv[1]);
+    if (count <= 0 || count > HIL_MAX_TIMERS) {
+        print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
+        return -1;
+    }
+
+    for (int i = 0; i < count; i++) {
+        test_timers[i].callback = _overhead_callback;
+    }
+
+    /* new timer always last */
+    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
+        HIL_START_TIMER();
+        for (int n = 0; n < count; ++n) {
+            TIMER_SET(&test_timers[n], _delay(i));
+        }
+        HIL_STOP_TIMER();
+
+        for (int n = 0; n < count; ++n) {
+            TIMER_REMOVE(&test_timers[n]);
+        }
+    }
+
+    print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
+    return 0;
+}
+
 int cmd_get_timer_version(int argc, char **argv)
 {
     (void)argv;
@@ -511,6 +550,7 @@ static const shell_command_t shell_commands[] = {
       sleep_accuracy_timer_set_cmd },
     { "sleep_jitter", "sleep jitter", sleep_jitter_cmd },
     { "drift", "Drift Simple benchmark", drift_cmd },
+    { "list_ops", "Set N timers", list_ops_cmd },
     { "get_metadata", "Get the metadata of the test firmware",
       cmd_get_metadata },
     { "get_timer_version", "Get timer version", cmd_get_timer_version },

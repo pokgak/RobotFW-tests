@@ -62,6 +62,10 @@ class DutDeviceIf(DutShell):
         """Run the drift simple benchmark"""
         return self.cmd_extended_timeout("drift {}".format(duration), 75)
 
+    def list_operation(self, count):
+        """Set N timers"""
+        return self.send_cmd("list_ops {}".format(count))
+
     ## HELPER FUNCTIONS
 
     def cmd_extended_timeout(self, command, timeout):
