@@ -45,8 +45,7 @@ Measure GPIO Overhead
 
 Set ${count} Timers
     [Documentation]            Run the list operations benchmark
-    API Call Should Succeed    Drift        ${count}
-
+    API Call Should Succeed    DutDeviceIf.List Operation       ${count}
     API Call Should Succeed    PHILIP.Read Trace
     ${PHILIP_RES}=             DutDeviceIf.Filter Trace         ${RESULT['data']}    select_vals=FALLING    data_keys=diff
     ${RESULT}=                 DutDeviceIf.Compress Result      ${PHILIP_RES}
@@ -78,5 +77,6 @@ Measure Overhead Remove Last Timer      Measure Timer Overhead    07    remove  
 # list operations
 Measure Add Timers
     FOR  ${n}  IN RANGE  1  51
+        PHILIP Reset
         Set ${n} Timers
     END

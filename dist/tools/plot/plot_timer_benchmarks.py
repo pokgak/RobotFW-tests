@@ -103,7 +103,9 @@ class FigurePlotter:
             f"testcase[@classname='tests_{self.timer_version}_benchmarks.Sleep Jitter']"
         ):
             bg_timer_count = int(
-                testcase.find("properties/property[@name='bg-timer-count']").get("value")
+                testcase.find("properties/property[@name='bg-timer-count']").get(
+                    "value"
+                )
             )
             main_timer_interval = int(
                 testcase.find("properties/property[@name='main-timer-interval']").get(
@@ -316,6 +318,32 @@ class FigurePlotter:
             include_plotlyjs=self.plotlyjs,
         )
 
+    def plot_list_ops(self, filename):
+        data = {"timer_count": [], "duration": []}
+        test = self.root.find(f"testcase[@name='Measure Add Timers']")
+        for prop in test.findall(".//property"):
+            name = prop.get("name").split("-")
+            count = name[0]
+            trace = literal_eval(prop.get("value"))
+
+            data["timer_count"].extend([count] * len(trace))
+            data["duration"].extend(trace)
+
+        df = pd.DataFrame(data)
+
+        fig = px.box(df, x="timer_count", y="duration")
+        fig.update_layout(
+            title="Setting N Timers: {:s} with {:s}".format(
+                self.board, self.timer_version
+            ),
+            yaxis_title="Duration [s]",
+            xaxis_title="Nr. of Timers",
+        )
+        fig.show()
+        # fig.write_image(
+        #     "{}/{}_{}.pdf".format(self.outdir, self.board, filename),
+        # )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -346,6 +374,7 @@ if __name__ == "__main__":
         os.makedirs(args.outdir)
 
     plotter = FigurePlotter(args.input, args.outdir, args.for_ci, args.board)
-    plotter.plot_overhead("overhead.html")
-    plotter.plot_accuracy("accuracy")
-    plotter.plot_jitter("jitter")
+    # plotter.plot_overhead("overhead.html")
+    # plotter.plot_accuracy("accuracy")
+    # plotter.plot_jitter("jitter")
+    plotter.plot_list_ops("list_operations")

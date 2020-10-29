@@ -492,11 +492,11 @@ int list_ops_cmd(int argc, char **argv)
         test_timers[i].callback = _overhead_callback;
     }
 
-    /* new timer always last */
     for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
         HIL_START_TIMER();
         for (int n = 0; n < count; ++n) {
-            TIMER_SET(&test_timers[n], _delay(i));
+            /* _delay() makes sure new timer always last */
+            TIMER_SET(&test_timers[n], _delay(n));
         }
         HIL_STOP_TIMER();
 
