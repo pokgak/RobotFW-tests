@@ -76,6 +76,7 @@ Measure Overhead Remove Last Timer      Measure Timer Overhead    07    remove  
 
 # list operations
 Measure Add Timers
+    RIOT Reset  # make sure earlier does not affect this
     FOR  ${n}  IN RANGE  1  51
         PHILIP Reset
         Set ${n} Timers
