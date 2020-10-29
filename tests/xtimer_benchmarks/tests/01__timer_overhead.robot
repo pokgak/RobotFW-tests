@@ -13,6 +13,8 @@ Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
 
+Force Tags     dev
+
 *** Keywords ***
 Measure Timer Overhead
     [Arguments]    ${no}    ${method}    ${position}
@@ -41,6 +43,16 @@ Measure GPIO Overhead
     ${GPIO_OVERHEAD}=          DutDeviceIf.Compress Result                ${RESULT}
     Record Property            overhead-00-gpio                              ${GPIO_OVERHEAD['diff']}
 
+Set ${count} Timers
+    [Documentation]            Run the list operations benchmark
+    API Call Should Succeed    Drift        ${count}
+
+    API Call Should Succeed    PHILIP.Read Trace
+    ${PHILIP_RES}=             DutDeviceIf.Filter Trace         ${RESULT['data']}    select_vals=FALLING    data_keys=diff
+    ${RESULT}=                 DutDeviceIf.Compress Result      ${PHILIP_RES}
+
+    Record Property            ${count}-timer-trace             ${RESULT['diff']}
+
 *** Test Cases ***
 Measure GPIO
     FOR  ${_}  IN RANGE  20
@@ -62,3 +74,9 @@ Measure Overhead Set Last Timer      Measure Timer Overhead    04    set    last
 Measure Overhead Remove First Timer     Measure Timer Overhead    05    remove    first
 Measure Overhead Remove Middle Timer    Measure Timer Overhead    06    remove    middle
 Measure Overhead Remove Last Timer      Measure Timer Overhead    07    remove    last
+
+# list operations
+Measure Add Timers
+    FOR  ${n}  IN RANGE  1  51
+        Set ${n} Timers
+    END
