@@ -116,7 +116,7 @@ void cleanup_overhead(void)
     }
 }
 
-int overhead_gpio_cmd(int argc, char **argv)
+int __attribute__((optimize("O0"))) overhead_gpio_cmd(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
