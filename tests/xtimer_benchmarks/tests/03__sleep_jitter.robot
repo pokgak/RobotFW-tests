@@ -19,6 +19,7 @@ Test Template  Measure Sleep Jitter
 Measure Sleep Jitter
     [Documentation]            Run the sleep jitter benchmark
     [Arguments]                ${bg_timer_count}
+    [Teardown]                 Run Keywords                                         PHILIP Reset
 
     API Call Should Succeed    Sleep Jitter                     ${bg_timer_count}
     ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}

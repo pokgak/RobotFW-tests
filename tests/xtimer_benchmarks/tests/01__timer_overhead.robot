@@ -18,6 +18,7 @@ Force Tags     dev
 *** Keywords ***
 Measure Timer Overhead
     [Arguments]    ${no}    ${method}    ${position}
+    [Teardown]                 Run Keywords                                         PHILIP Reset
 
     API Call Should Succeed    Overhead Timer                 ${method}                      ${position}
     ${RESULT}=                 Run Keyword                    DutDeviceIf.Compress Result    data=${RESULT['data']}
@@ -30,6 +31,8 @@ Measure Timer Overhead
     Record Property    overhead-${no}-${method}-${position}-timer    ${OVERHEAD['diff']}
 
 Measure Timer Now Overhead
+    [Teardown]                 Run Keywords                                         PHILIP Reset
+
     API Call Should Succeed    Overhead Timer Now
     API Call Should Succeed    PHILIP.Read Trace
     ${RESULT}=                 DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select_vals=FALLING    data_keys=diff
@@ -37,6 +40,8 @@ Measure Timer Now Overhead
     Record Property            overhead-01-timer-now               ${OVERHEAD['diff']}
 
 Measure GPIO Overhead
+    [Teardown]                 Run Keywords                                         PHILIP Reset
+
     API Call Should Succeed    Overhead GPIO
     API Call Should Succeed    PHILIP.Read Trace
     ${RESULT}=                 DutDeviceIf.Filter Trace                   trace=${RESULT['data']}     select_vals=FALLING    data_keys=diff
@@ -45,6 +50,8 @@ Measure GPIO Overhead
 
 Set ${count} Timers
     [Documentation]            Run the list operations benchmark
+    [Teardown]                 Run Keywords                                         PHILIP Reset
+
     API Call Should Succeed    DutDeviceIf.List Operation       ${count}
     API Call Should Succeed    PHILIP.Read Trace
     ${PHILIP_RES}=             DutDeviceIf.Filter Trace         ${RESULT['data']}    select_vals=FALLING    data_keys=diff
@@ -78,6 +85,5 @@ Measure Overhead Remove Last Timer      Measure Timer Overhead    07    remove  
 Measure Add Timers
     RIOT Reset  # make sure earlier does not affect this
     FOR  ${n}  IN RANGE  1  51
-        PHILIP Reset
         Set ${n} Timers
     END
