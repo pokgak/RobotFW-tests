@@ -32,6 +32,7 @@ Measure Drift
 
 *** Test Cases ***
 Measure Drift Template
+    [Teardown]  Run Keywords  PHILIP Reset
     [Template]  Measure Drift
     1000000
     15000000

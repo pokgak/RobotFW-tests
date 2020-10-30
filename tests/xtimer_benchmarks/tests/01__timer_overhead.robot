@@ -18,7 +18,7 @@ Force Tags     dev
 *** Keywords ***
 Measure Timer Overhead
     [Arguments]    ${no}    ${method}    ${position}
-    [Teardown]                 Run Keywords                                         PHILIP Reset
+    [Teardown]  Run Keywords  PHILIP Reset
 
     API Call Should Succeed    Overhead Timer                 ${method}                      ${position}
     ${RESULT}=                 Run Keyword                    DutDeviceIf.Compress Result    data=${RESULT['data']}
@@ -31,7 +31,7 @@ Measure Timer Overhead
     Record Property    overhead-${no}-${method}-${position}-timer    ${OVERHEAD['diff']}
 
 Measure Timer Now Overhead
-    [Teardown]                 Run Keywords                                         PHILIP Reset
+    [Teardown]  Run Keywords  PHILIP Reset
 
     API Call Should Succeed    Overhead Timer Now
     API Call Should Succeed    PHILIP.Read Trace
@@ -40,7 +40,7 @@ Measure Timer Now Overhead
     Record Property            overhead-01-timer-now               ${OVERHEAD['diff']}
 
 Measure GPIO Overhead
-    [Teardown]                 Run Keywords                                         PHILIP Reset
+    [Teardown]  Run Keywords  PHILIP Reset
 
     API Call Should Succeed    Overhead GPIO
     API Call Should Succeed    PHILIP.Read Trace
@@ -50,7 +50,7 @@ Measure GPIO Overhead
 
 Set ${count} Timers
     [Documentation]            Run the list operations benchmark
-    [Teardown]                 Run Keywords                                         PHILIP Reset
+    [Teardown]  Run Keywords  PHILIP Reset
 
     API Call Should Succeed    DutDeviceIf.List Operation       ${count}
     API Call Should Succeed    PHILIP.Read Trace
@@ -61,6 +61,7 @@ Set ${count} Timers
 
 *** Test Cases ***
 Measure GPIO
+    [Teardown]  Run Keywords  PHILIP Reset
     FOR  ${_}  IN RANGE  20
         Measure GPIO Overhead
     END
@@ -68,6 +69,7 @@ Measure GPIO
 
 # get time
 Measure Overhead TIMER_NOW
+    [Teardown]  Run Keywords  PHILIP Reset
     FOR  ${_}  IN RANGE  20
         Measure Timer Now Overhead
     END
@@ -83,6 +85,7 @@ Measure Overhead Remove Last Timer      Measure Timer Overhead    07    remove  
 
 # list operations
 Measure Add Timers
+    [Teardown]  Run Keywords  PHILIP Reset
     RIOT Reset  # make sure earlier does not affect this
     FOR  ${n}  IN RANGE  1  51
         Set ${n} Timers

@@ -17,7 +17,7 @@ Test Setup     Run Keywords
 *** Keywords ***
 Measure Sleep Accuracy with ${type} for ${duration}
     [Documentation]            Sleep for specified duration in microseconds (us)
-    [Teardown]                 Run Keywords                                         PHILIP Reset
+    [Teardown]  Run Keywords  PHILIP Reset
     API Call Should Succeed    Sleep Accuracy                                       ${type}                    ${duration}
     API Call Should Succeed    PHILIP.Read Trace
     ${RESULT}=                 DutDeviceIf.Filter Trace                             trace=${RESULT['data']}    select_vals=FALLING    data_keys=diff
@@ -26,11 +26,13 @@ Measure Sleep Accuracy with ${type} for ${duration}
 
 *** Test Cases ***
 Measure TIMER_SET Accuracy
+    [Teardown]  Run Keywords  PHILIP Reset
     FOR     ${duration}     IN RANGE    1    101
         Measure Sleep Accuracy with TIMER_SET for ${duration}
     END
 
 Measure TIMER_SLEEP Accuracy
+    [Teardown]  Run Keywords  PHILIP Reset
     FOR     ${duration}     IN RANGE    1    101
         Measure Sleep Accuracy with TIMER_SLEEP for ${duration}
     END
