@@ -98,7 +98,7 @@ static void spin(uint32_t limit)
 
 void spin_random_delay(void)
 {
-    uint32_t limit = random_uint32_range(0, spin_max);
+    uint32_t limit = random_uint32_range(32, spin_max);
 
     spin(limit);
 }
@@ -129,7 +129,6 @@ int overhead_gpio_cmd(int argc, char **argv)
         spin_random_delay();
         HIL_START_TIMER();
         HIL_STOP_TIMER();
-        spin_random_delay();
     }
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
     return 0;
