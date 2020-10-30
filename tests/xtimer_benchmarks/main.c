@@ -128,6 +128,7 @@ int __attribute__((optimize("O0"))) overhead_gpio_cmd(int argc, char **argv)
     for (int i = 0; i < HIL_TEST_REPEAT; i++) {
         spin_random_delay();
         HIL_START_TIMER();
+        __asm__ volatile ("");
         HIL_STOP_TIMER();
     }
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
@@ -359,7 +360,7 @@ static void _sleep_jitter_cb(void *arg)
     }
 }
 
-static void *main_periodic_timer(void *arg)
+static void* __attribute__((optimize("O0"))) main_periodic_timer(void *arg)
 {
 #ifndef MODULE_ZTIMER
     xtimer_ticks32_t last_wakeup = xtimer_now();
@@ -370,6 +371,7 @@ static void *main_periodic_timer(void *arg)
     for (unsigned i = 0; i < HIL_TEST_REPEAT + 1; i++) {
         HIL_START_TIMER();
         TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
+        __asm__ volatile ("");
         HIL_STOP_TIMER();
     }
 
