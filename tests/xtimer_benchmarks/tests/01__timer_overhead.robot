@@ -39,12 +39,16 @@ Measure Timer Now Overhead
     ${OVERHEAD}=               DutDeviceIf.Compress Result      ${RESULT}
     Record Property            overhead-01-timer-now               ${OVERHEAD['diff']}
 
+emergency
+    fail    GPIO event does not start with RISING
+
 Measure GPIO Overhead
     [Teardown]  Run Keywords  PHILIP Reset
 
     API Call Should Succeed    Overhead GPIO
     API Call Should Succeed    PHILIP.Read Trace
     ${debug}=                  DutDeviceIf.Compress Result  ${RESULT['data']}
+    Run Keyword if  ${debug["event"][0] != "RISING"}    emergency
     Record Property            overhead-gpio-debug          ${debug}
     ${RESULT}=                 DutDeviceIf.Filter Trace                   trace=${RESULT['data']}     select_vals=FALLING    data_keys=diff
     ${GPIO_OVERHEAD}=          DutDeviceIf.Compress Result                ${RESULT}
