@@ -121,6 +121,8 @@ int overhead_gpio_cmd(int argc, char **argv)
     (void)argc;
     (void)argv;
 
+    gpio_clear(HIL_TEST_GPIO);
+
     sprintf(printbuf, "gpio overhead");
     print_cmd(PARSER_DEV_NUM, printbuf);
     for (int i = 0; i < HIL_TEST_REPEAT; i++) {
@@ -140,6 +142,8 @@ int overhead_timer_now(int argc, char **argv)
 
     sprintf(printbuf, "overhead timer now");
     print_cmd(PARSER_DEV_NUM, printbuf);
+
+    gpio_clear(HIL_TEST_GPIO);
 
     for (unsigned i = 0; i < HIL_TEST_REPEAT; ++i) {
         HIL_START_TIMER();
@@ -169,6 +173,8 @@ int timer_overhead_timer_cmd(int argc, char **argv)
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
         return -1;
     }
+
+    gpio_clear(HIL_TEST_GPIO);
 
     const char *method = argv[1];
     const char *pos = argv[2];
@@ -260,6 +266,8 @@ int sleep_accuracy_timer_set_cmd(int argc, char **argv)
         return -1;
     }
 
+    gpio_clear(HIL_TEST_GPIO);
+
     int sleeptime = strtol(argv[1], NULL, 10);
     if (sleeptime < 0) {
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
@@ -294,6 +302,8 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
         return -1;
     }
+
+    gpio_clear(HIL_TEST_GPIO);
 
     sprintf(printbuf, "sleep_accuracy: timer_sleep(%s)", argv[1]);
     print_cmd(PARSER_DEV_NUM, printbuf);
@@ -338,6 +348,8 @@ void cleanup_jitter(unsigned count, jitter_params_t *params)
     for (unsigned i = 0; i < count; ++i) {
         TIMER_REMOVE(params[i].timer);
     }
+
+    gpio_clear(HIL_TEST_GPIO);
 }
 
 static void _sleep_jitter_cb(void *arg)
@@ -373,6 +385,8 @@ int sleep_jitter_cmd(int argc, char **argv)
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
         return -1;
     }
+
+    gpio_clear(HIL_TEST_GPIO);
 
     print_cmd(PARSER_DEV_NUM, "sleep_jitter");
 
@@ -450,6 +464,8 @@ int drift_cmd(int argc, char **argv)
         return -1;
     }
 
+    gpio_clear(HIL_TEST_GPIO);
+
     uint32_t duration = atoi(argv[1]);  /* duration in microseconds */
     sprintf(printbuf, "drift: %" PRIu32 " us", duration);
     print_cmd(PARSER_DEV_NUM, printbuf);
@@ -481,6 +497,8 @@ int list_ops_cmd(int argc, char **argv)
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
         return -1;
     }
+
+    gpio_clear(HIL_TEST_GPIO);
 
     int count = atoi(argv[1]);
     if (count <= 0 || count > HIL_MAX_TIMERS) {
@@ -562,6 +580,8 @@ int main(void)
     (void)puts("Welcome to RIOT!");
 
     gpio_init(HIL_TEST_GPIO, GPIO_OUT);
+    /* clear initial state */
+    gpio_clear(HIL_TEST_GPIO);
 
     random_init(0);
 
