@@ -78,7 +78,7 @@ uint8_t out_buf[64];
 static TIMER_T test_timers[HIL_MAX_TIMERS];
 
 /* Default is whatever, just some small delay if the user forgets to initialize */
-static uint32_t spin_max = 64;
+static uint32_t spin_max = 128;
 
 /************************
 * HELPER FUNCTIONS
@@ -98,7 +98,7 @@ static void spin(uint32_t limit)
 
 void spin_random_delay(void)
 {
-    uint32_t limit = random_uint32_range(32, spin_max);
+    uint32_t limit = random_uint32_range(64, spin_max);
 
     spin(limit);
 }
@@ -341,6 +341,7 @@ static volatile bool jitter_end;
 typedef struct sleep_jitter_params {
     TIMER_T *timer;
     uint32_t duration;
+    uint32_t last_ts;
 } jitter_params_t;
 
 void cleanup_jitter(unsigned count, jitter_params_t *params)
@@ -357,8 +358,17 @@ void cleanup_jitter(unsigned count, jitter_params_t *params)
 static void _sleep_jitter_cb(void *arg)
 {
     if (!jitter_end) {
+        uint32_t now_ts = TIMER_NOW();
         jitter_params_t *params = (jitter_params_t *)arg;
-        TIMER_SET(params->timer, params->duration);
+        if ((params->last_ts + params->duration) > now_ts) {
+            /* we arrived earlier than target*/
+            TIMER_SET(params->timer, now_ts - (params->duration - params->last_ts));
+        }
+        else {
+            /* we arrive later than target */
+            TIMER_SET(params->timer, params->duration - (now_ts - params->duration));
+        }
+        params->last_ts = now_ts;
     }
 }
 
