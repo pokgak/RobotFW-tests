@@ -15,9 +15,13 @@ Test Setup     Run Keywords
 # Force Tags  dev
 
 *** Keywords ***
+Test Teardown
+    Run Keyword If  '${KEYWORD_STATUS}' != 'PASS'     RIOT Reset
+    PHILIP Reset
+
 Measure Sleep Accuracy with ${type} for ${duration}
     [Documentation]            Sleep for specified duration in microseconds (us)
-    [Teardown]  Run Keywords  PHILIP Reset
+    [Teardown]  Test Teardown
     API Call Should Succeed    Sleep Accuracy                                       ${type}                    ${duration}
     API Call Should Succeed    PHILIP.Read Trace
     ${RESULT}=                 DutDeviceIf.Filter Trace                             trace=${RESULT['data']}    select=FALLING
