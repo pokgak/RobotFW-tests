@@ -48,6 +48,12 @@ Measure GPIO Overhead
 
     API Call Should Succeed    Overhead GPIO
     API Call Should Succeed    PHILIP.Read Trace
+
+    Record Property     debug-uncompressed  ${RESULT['data']}
+
+    ${debug-compressed}=     DutDeviceIf.Compress Result   ${RESULT['data']}
+    Record Property     debug-compressed  ${debug-compressed}
+
     ${RESULT}=                 DutDeviceIf.Filter Trace                   trace=${RESULT['data']}     select=FALLING
     ${GPIO_OVERHEAD}=          DutDeviceIf.Compress Result                ${RESULT}
     Record Property            overhead-00-gpio                              ${GPIO_OVERHEAD['diff']}
