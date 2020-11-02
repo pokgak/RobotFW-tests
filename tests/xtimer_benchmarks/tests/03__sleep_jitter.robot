@@ -16,10 +16,14 @@ Test Template  Measure Sleep Jitter
 Force Tags  dev
 
 *** Keywords ***
+Test Teardown
+    Run Keyword If  '${KEYWORD_STATUS}' != 'PASS'     RIOT Reset
+    PHILIP Reset
+
 Measure Sleep Jitter
     [Documentation]            Run the sleep jitter benchmark
     [Arguments]                ${bg_timer_count}
-    [Teardown]                 PHILIP Reset
+    [Teardown]                 Test Teardown
 
     API Call Should Succeed    Sleep Jitter                     ${bg_timer_count}
     ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}

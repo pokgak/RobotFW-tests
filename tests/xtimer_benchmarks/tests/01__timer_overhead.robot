@@ -16,9 +16,13 @@ Test Setup     Run Keywords
 # Force Tags     dev
 
 *** Keywords ***
+Test Teardown
+    Run Keyword If  '${KEYWORD_STATUS}' != 'PASS'     RIOT Reset
+    PHILIP Reset
+
 Measure Timer Overhead
     [Arguments]    ${no}    ${method}    ${position}
-    [Teardown]  Run Keywords  PHILIP Reset
+    [Teardown]  Test Teardown
 
     API Call Should Succeed    Overhead Timer                 ${method}                      ${position}
     ${RESULT}=                 Run Keyword                    DutDeviceIf.Compress Result    data=${RESULT['data']}
@@ -31,7 +35,7 @@ Measure Timer Overhead
     Record Property    overhead-${no}-${method}-${position}-timer    ${OVERHEAD['diff']}
 
 Measure Timer Now Overhead
-    [Teardown]  Run Keywords  PHILIP Reset
+    [Teardown]  Test Teardown
 
     API Call Should Succeed    Overhead Timer Now
     API Call Should Succeed    PHILIP.Read Trace
@@ -39,11 +43,8 @@ Measure Timer Now Overhead
     ${OVERHEAD}=               DutDeviceIf.Compress Result      ${RESULT}
     Record Property            overhead-01-timer-now            ${OVERHEAD['diff']}
 
-emergency
-    fail    GPIO event does not start with RISING
-
 Measure GPIO Overhead
-    [Teardown]  Run Keywords  PHILIP Reset
+    [Teardown]  Test Teardown
 
     API Call Should Succeed    Overhead GPIO
     API Call Should Succeed    PHILIP.Read Trace
@@ -53,7 +54,7 @@ Measure GPIO Overhead
 
 Set ${count} Timers
     [Documentation]            Run the list operations benchmark
-    [Teardown]  Run Keywords  PHILIP Reset
+    [Teardown]  Test Teardown
 
     API Call Should Succeed    DutDeviceIf.List Operation       ${count}
     API Call Should Succeed    PHILIP.Read Trace
