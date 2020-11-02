@@ -28,14 +28,7 @@ Measure Sleep Jitter
     Record Property            bg-timer-count                   ${RESULT['bg-timer-count']}
     API Call Should Succeed    PHILIP.Read Trace
 
-    Record Property            debug-unfiltered-uncompressed    ${RESULT['data']}
-    ${debug-compressed}=       DutDeviceIf.Compress Result      ${RESULT['data']}
-    Record Property            debug-unfiltered-compressed      ${debug-compressed}
-
     ${FILTERED}=               DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select=FALLING
-
-    Record Property            debug-filtered-uncompressed      ${FILTERED}
-
     ${RESULT}=                 DutDeviceIf.Compress Result      ${FILTERED}
     Record Property            trace                            ${RESULT['diff']}
 
