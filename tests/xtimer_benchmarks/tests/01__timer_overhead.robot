@@ -88,9 +88,9 @@ Measure Overhead Remove Middle Timer    Measure Timer Overhead    06    remove  
 Measure Overhead Remove Last Timer      Measure Timer Overhead    07    remove    last
 
 # list operations
-Measure Add Timers
-    [Teardown]  Run Keywords  PHILIP Reset
-    RIOT Reset  # make sure earlier does not affect this
-    FOR  ${n}  IN RANGE  1  51
-        Set ${n} Timers
-    END
+# Measure Add Timers
+#     [Teardown]  Run Keywords  PHILIP Reset
+#     RIOT Reset  # make sure earlier does not affect this
+#     FOR  ${n}  IN RANGE  1  51
+#         Set ${n} Timers
+#     END
