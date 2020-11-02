@@ -28,13 +28,17 @@ Measure Sleep Jitter
 
     ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}
 
-    Record Property            debug-unfiltered                 ${RESULT}
-
     Record Property            main-timer-interval              ${RESULT['main-timer-interval']}
     Record Property            bg-timer-interval                ${RESULT['bg-timer-interval']}
     Record Property            bg-timer-count                   ${RESULT['bg-timer-count']}
     API Call Should Succeed    PHILIP.Read Trace
+
+    Record Property            debug-unfiltered                 ${RESULT}
+
     ${FILTERED}=               DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select_vals=FALLING    data_keys=diff
+
+    Record Property            debug-filtered-uncompressed      ${FILTERED}
+
     ${RESULT}=                 DutDeviceIf.Compress Result      ${FILTERED}
     Record Property            trace                            ${RESULT['diff']}
 
