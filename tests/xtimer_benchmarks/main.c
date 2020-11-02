@@ -146,10 +146,10 @@ int overhead_timer_now(int argc, char **argv)
     gpio_clear(HIL_TEST_GPIO);
 
     for (unsigned i = 0; i < HIL_TEST_REPEAT; ++i) {
+        spin_random_delay();
         HIL_START_TIMER();
         TIMER_NOW();
         HIL_STOP_TIMER();
-        spin_random_delay();
     }
 
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
@@ -214,11 +214,12 @@ int timer_overhead_timer_cmd(int argc, char **argv)
                 TIMER_SET(&test_timers[i], _delay(i));
             }
 
+            spin_random_delay();
+
             /* set the last timer */
             HIL_START_TIMER();
             TIMER_SET(&test_timers[timer_idx], _delay(timer_idx));
             HIL_STOP_TIMER();
-            spin_random_delay();
         }
     }
     else if (strcmp(method, "remove") == 0) {
@@ -228,11 +229,12 @@ int timer_overhead_timer_cmd(int argc, char **argv)
                 TIMER_SET(&test_timers[i], _delay(i));
             }
 
+            spin_random_delay();
+
             /* remove the timer at timer_idx */
             HIL_START_TIMER();
             TIMER_REMOVE(&test_timers[timer_idx]);
             HIL_STOP_TIMER();
-            spin_random_delay();
         }
     }
     else {
