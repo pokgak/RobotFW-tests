@@ -371,7 +371,6 @@ static void* __attribute__((optimize("O0"))) main_periodic_timer(void *arg)
     for (unsigned i = 0; i < HIL_TEST_REPEAT + 1; i++) {
         HIL_START_TIMER();
         TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
-        __asm__ volatile ("");
         HIL_STOP_TIMER();
     }
 
@@ -556,6 +555,26 @@ int cmd_get_metadata(int argc, char **argv)
     return 0;
 }
 
+int cmd_gpio_clear(int argc, char **argv)
+{
+    (void)argv;
+    (void)argc;
+
+    gpio_clear(HIL_TEST_GPIO);
+
+    return 0;
+}
+
+int cmd_gpio_set(int argc, char **argv)
+{
+    (void)argv;
+    (void)argc;
+
+    gpio_set(HIL_TEST_GPIO);
+
+    return 0;
+}
+
 static const shell_command_t shell_commands[] = {
     { "overhead_gpio", "Benchmark the gpio toggling overhead",
       overhead_gpio_cmd },
@@ -573,6 +592,8 @@ static const shell_command_t shell_commands[] = {
     { "get_metadata", "Get the metadata of the test firmware",
       cmd_get_metadata },
     { "get_timer_version", "Get timer version", cmd_get_timer_version },
+    { "gclear", "clear", cmd_gpio_clear },
+    { "gset", "set", cmd_gpio_set },
     { NULL, NULL, NULL }
 };
 

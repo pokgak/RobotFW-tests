@@ -19,15 +19,10 @@ Force Tags  dev
 Measure Sleep Jitter
     [Documentation]            Run the sleep jitter benchmark
     [Arguments]                ${bg_timer_count}
-    [Teardown]  Run Keywords  PHILIP Reset
+    [Teardown]                 PHILIP Reset
 
     API Call Should Succeed    Sleep Jitter                     ${bg_timer_count}
-
-    ${debug-uncompressed}      DutDeviceIf.Compress Result      ${RESULT['data']}
-    Record Property            debug-uncompressed               ${debug-uncompressed}
-
     ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}
-
     Record Property            main-timer-interval              ${RESULT['main-timer-interval']}
     Record Property            bg-timer-interval                ${RESULT['bg-timer-interval']}
     Record Property            bg-timer-count                   ${RESULT['bg-timer-count']}
@@ -37,7 +32,7 @@ Measure Sleep Jitter
     ${debug-compressed}=       DutDeviceIf.Compress Result      ${RESULT['data']}
     Record Property            debug-unfiltered-compressed      ${debug-compressed}
 
-    ${FILTERED}=               DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select_vals=FALLING    data_keys=diff
+    ${FILTERED}=               DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select=FALLING
 
     Record Property            debug-filtered-uncompressed      ${FILTERED}
 

@@ -25,7 +25,7 @@ Measure Timer Overhead
     Record Property            timer-count                    ${RESULT['timer count']}
     Record Property            sample-count                   ${RESULT['sample count']}
     API Call Should Succeed    PHILIP.Read Trace
-    ${RESULT}=                 DutDeviceIf.Filter Trace       trace=${RESULT['data']}        select_vals=FALLING       data_keys=diff
+    ${RESULT}=                 DutDeviceIf.Filter Trace       trace=${RESULT['data']}        select=FALLING
     ${OVERHEAD}=               DutDeviceIf.Compress Result    ${RESULT}
 
     Record Property    overhead-${no}-${method}-${position}-timer    ${OVERHEAD['diff']}
@@ -35,7 +35,7 @@ Measure Timer Now Overhead
 
     API Call Should Succeed    Overhead Timer Now
     API Call Should Succeed    PHILIP.Read Trace
-    ${RESULT}=                 DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select_vals=FALLING    data_keys=diff
+    ${RESULT}=                 DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select=FALLING
     ${OVERHEAD}=               DutDeviceIf.Compress Result      ${RESULT}
     Record Property            overhead-01-timer-now               ${OVERHEAD['diff']}
 
@@ -50,7 +50,7 @@ Measure GPIO Overhead
     ${debug}=                  DutDeviceIf.Compress Result  ${RESULT['data']}
     Run Keyword if  ${debug["event"][0] != "RISING"}    emergency
     Record Property            overhead-gpio-debug          ${debug}
-    ${RESULT}=                 DutDeviceIf.Filter Trace                   trace=${RESULT['data']}     select_vals=FALLING    data_keys=diff
+    ${RESULT}=                 DutDeviceIf.Filter Trace                   trace=${RESULT['data']}     select=FALLING
     ${GPIO_OVERHEAD}=          DutDeviceIf.Compress Result                ${RESULT}
     Record Property            overhead-00-gpio                              ${GPIO_OVERHEAD['diff']}
 
@@ -60,7 +60,7 @@ Set ${count} Timers
 
     API Call Should Succeed    DutDeviceIf.List Operation       ${count}
     API Call Should Succeed    PHILIP.Read Trace
-    ${PHILIP_RES}=             DutDeviceIf.Filter Trace         ${RESULT['data']}    select_vals=FALLING    data_keys=diff
+    ${PHILIP_RES}=             DutDeviceIf.Filter Trace         ${RESULT['data']}    select=FALLING
     ${RESULT}=                 DutDeviceIf.Compress Result      ${PHILIP_RES}
 
     Record Property            ${count}-timer-trace             ${RESULT['diff']}

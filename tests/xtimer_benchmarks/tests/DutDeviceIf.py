@@ -89,33 +89,26 @@ class DutDeviceIf(DutShell):
                     values.append(e[key])
         return values if len(values) > 1 else values[0]
 
-    def filter_trace(self, trace, data_keys=None, select_vals=None):
+    @staticmethod
+    def filter_trace(trace, select: str):
         """Filter the given data from a trace
 
+        Use only on uncompressed trace data.
+
         Args:
-            data_keys: A string or a list of key(s) to be included in result
-            select_vals: A string or a list of key(s) to filter.
-                         Events containing this string will be included in the filtered result.
+            select: A string key to filter.
+                    Events containing this string will be included in the filtered result.
         Returns:
             A list of dictionaries containing the filtered data
         """
-        filtered_events = []
 
-        if isinstance(data_keys, str):
-            data_keys = [data_keys]
-        if isinstance(select_vals, str):
-            select_vals = [select_vals]
-        for event in trace:
-            if select_vals is None or all(
-                sel_val in event.values() for sel_val in select_vals
-            ):
-                if data_keys:
-                    filtered_events.append({k: event[k] for k in data_keys})
-                else:
-                    filtered_events.append(event)
-        return filtered_events
+        if not isinstance(select, str):
+            raise RuntimeError("Wrong type for select")
 
-    def compress_result(self, data, key=None):
+        return [event for event in trace if select in event.values()]
+
+    @staticmethod
+    def compress_result(data, key=None):
         """Only use with data containing dicts as follows:
 
         Simplifies data from
@@ -137,4 +130,3 @@ class DutDeviceIf(DutShell):
                         values.append(e[k])
             result[k] = values if len(values) > 1 else values[0]
         return result
-

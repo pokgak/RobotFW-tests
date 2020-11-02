@@ -24,7 +24,7 @@ Measure Drift
     Record Property            dut-result-${duration}-repeat-${i}    ${RESULT['data']}
 
     API Call Should Succeed    PHILIP.Read Trace
-    ${PHILIP_RES}=             DutDeviceIf.Filter Trace                 ${RESULT['data']}    select_vals=FALLING    data_keys=diff
+    ${PHILIP_RES}=             DutDeviceIf.Filter Trace                 ${RESULT['data']}    select=FALLING
     ${RESULT}=                 DutDeviceIf.Compress Result              ${PHILIP_RES}
     Record Property            philip-result-${duration}-repeat-${i}    ${RESULT['diff']}
     PHILIP Reset

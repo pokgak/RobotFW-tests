@@ -20,7 +20,7 @@ Measure Sleep Accuracy with ${type} for ${duration}
     [Teardown]  Run Keywords  PHILIP Reset
     API Call Should Succeed    Sleep Accuracy                                       ${type}                    ${duration}
     API Call Should Succeed    PHILIP.Read Trace
-    ${RESULT}=                 DutDeviceIf.Filter Trace                             trace=${RESULT['data']}    select_vals=FALLING    data_keys=diff
+    ${RESULT}=                 DutDeviceIf.Filter Trace                             trace=${RESULT['data']}    select=FALLING
     ${ACCURACY}=               DutDeviceIf.Compress Result                          ${RESULT}
     Record Property            accuracy-${type}-${duration}-philip                  ${ACCURACY['diff']}
 
