@@ -128,7 +128,7 @@ int __attribute__((optimize("O0"))) overhead_gpio_cmd(int argc, char **argv)
     for (int i = 0; i < HIL_TEST_REPEAT; i++) {
         spin_random_delay();
         HIL_START_TIMER();
-        __asm__ volatile ("");
+        // __asm__ volatile ("");
         HIL_STOP_TIMER();
     }
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
@@ -358,21 +358,24 @@ void cleanup_jitter(unsigned count, jitter_params_t *params)
 static void _sleep_jitter_cb(void *arg)
 {
     if (!jitter_end) {
-        uint32_t now_ts = TIMER_NOW();
         jitter_params_t *params = (jitter_params_t *)arg;
+        /* compensate bg timer trigger too early/late */
+        uint32_t now_ts = TIMER_NOW();
         if ((params->last_ts + params->duration) > now_ts) {
             /* we arrived earlier than target*/
-            TIMER_SET(params->timer, now_ts - (params->duration - params->last_ts));
+            TIMER_SET(params->timer,
+                      now_ts - (params->duration - params->last_ts));
         }
         else {
             /* we arrive later than target */
-            TIMER_SET(params->timer, params->duration - (now_ts - params->duration));
+            TIMER_SET(params->timer,
+                      params->duration - (now_ts - params->duration));
         }
         params->last_ts = now_ts;
     }
 }
 
-static void* __attribute__((optimize("O0"))) main_periodic_timer(void *arg)
+static void *__attribute__((optimize("O0"))) main_periodic_timer(void *arg)
 {
 #ifndef MODULE_ZTIMER
     xtimer_ticks32_t last_wakeup = xtimer_now();
