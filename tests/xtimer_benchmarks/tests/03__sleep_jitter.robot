@@ -13,7 +13,7 @@ Test Setup     Run Keywords
 ...            API Sync Shell
 Test Template  Measure Sleep Jitter
 
-# Force Tags  dev
+Force Tags  dev
 
 *** Keywords ***
 Measure Sleep Jitter
@@ -22,7 +22,14 @@ Measure Sleep Jitter
     [Teardown]  Run Keywords  PHILIP Reset
 
     API Call Should Succeed    Sleep Jitter                     ${bg_timer_count}
+
+    ${debug-uncompressed}      DutDeviceIf.Compress Result      ${RESULT['data']}
+    Record Property            debug-uncompressed               ${debug-uncompressed}
+
     ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}
+
+    Record Property            debug-unfiltered                 ${RESULT}
+
     Record Property            main-timer-interval              ${RESULT['main-timer-interval']}
     Record Property            bg-timer-interval                ${RESULT['bg-timer-interval']}
     Record Property            bg-timer-count                   ${RESULT['bg-timer-count']}
