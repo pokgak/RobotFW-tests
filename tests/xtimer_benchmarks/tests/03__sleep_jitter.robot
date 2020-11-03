@@ -13,7 +13,7 @@ Test Setup     Run Keywords
 ...            API Sync Shell
 Test Template  Measure Sleep Jitter
 
-# Force Tags  dev
+Force Tags  dev
 
 *** Keywords ***
 Test Teardown
