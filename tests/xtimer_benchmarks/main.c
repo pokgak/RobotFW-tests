@@ -357,27 +357,27 @@ void cleanup_jitter(unsigned count, jitter_params_t *params)
 
 static void _sleep_jitter_cb(void *arg)
 {
-    if (!jitter_end) {
-        jitter_params_t *params = (jitter_params_t *)arg;
-        TIMER_SET(params->timer, params->duration);
-    }
-    /* compensate past time */
     // if (!jitter_end) {
     //     jitter_params_t *params = (jitter_params_t *)arg;
-    //     /* compensate bg timer trigger too early/late */
-    //     uint32_t now_ts = TIMER_NOW();
-    //     if ((params->last_ts + params->duration) > now_ts) {
-    //         /* we arrived earlier than target*/
-    //         TIMER_SET(params->timer,
-    //                   now_ts - (params->duration - params->last_ts));
-    //     }
-    //     else {
-    //         /* we arrive later than target */
-    //         TIMER_SET(params->timer,
-    //                   params->duration - (now_ts - params->duration));
-    //     }
-    //     params->last_ts = now_ts;
+    //     TIMER_SET(params->timer, params->duration);
     // }
+    /* compensate past time */
+    if (!jitter_end) {
+        jitter_params_t *params = (jitter_params_t *)arg;
+        /* compensate bg timer trigger too early/late */
+        uint32_t now_ts = TIMER_NOW();
+        if ((params->last_ts + params->duration) > now_ts) {
+            /* we arrived earlier than target*/
+            TIMER_SET(params->timer,
+                      now_ts - (params->duration - params->last_ts));
+        }
+        else {
+            /* we arrive later than target */
+            TIMER_SET(params->timer,
+                      params->duration - (now_ts - params->duration));
+        }
+        params->last_ts = now_ts;
+    }
 }
 
 static void *__attribute__((optimize("O0"))) main_periodic_timer(void *arg)
@@ -388,11 +388,11 @@ static void *__attribute__((optimize("O0"))) main_periodic_timer(void *arg)
     uint32_t last_wakeup = ztimer_now(ZTIMER_CLOCK);
 #endif
 
-    for (unsigned i = 0; i < HIL_TEST_REPEAT + 10; i++) {
-        if (i < 10) {
-            TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
-            continue;
-        }
+    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
+        // if (i < 10) {
+        //     TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
+        //     continue;
+        // }
 
         HIL_START_TIMER();
         TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);

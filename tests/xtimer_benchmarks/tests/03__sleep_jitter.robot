@@ -11,7 +11,7 @@ Suite Setup    Run Keywords
 Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
-Test Template  Measure Sleep Jitter
+Test Template  Repeat Measure Jitter
 
 Force Tags  dev
 
@@ -35,6 +35,13 @@ Measure Sleep Jitter
     ${FILTERED}=               DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select=FALLING
     ${RESULT}=                 DutDeviceIf.Compress Result      ${FILTERED}
     Record Property            trace                            ${RESULT['diff']}
+
+Repeat Measure Jitter
+    [Arguments]     ${bg_timer_count}
+    [Teardown]      PHILIP Reset
+    FOR  ${n}  IN RANGE  5
+        Measure Sleep Jitter       ${bg_timer_count}
+    END
 
 *** Test Cases ***    BG TIMERS
 0 BG Timers     0
