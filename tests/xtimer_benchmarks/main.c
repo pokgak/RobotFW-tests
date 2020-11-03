@@ -438,7 +438,8 @@ int sleep_jitter_cmd(int argc, char **argv)
     /* setup half of the background timers before the periodic timer */
     for (unsigned i = 0; i < bg_timer_count / 2; i++) {
         jitter_params[i].timer = &test_timers[i];
-        jitter_params[i].duration = 20000;
+        jitter_params[i].duration = JITTER_BG_INTERVAL;
+        jitter_params[i].last_ts = TIMER_NOW();
 
         TIMER_T *timer = jitter_params[i].timer;
         timer->callback = _sleep_jitter_cb;
@@ -462,6 +463,7 @@ int sleep_jitter_cmd(int argc, char **argv)
     for (unsigned i = bg_timer_count / 2; i < bg_timer_count; i++) {
         jitter_params[i].timer = &test_timers[i];
         jitter_params[i].duration = JITTER_BG_INTERVAL;
+        jitter_params[i].last_ts = TIMER_NOW();
 
         TIMER_T *timer = jitter_params[i].timer;
         timer->callback = _sleep_jitter_cb;
