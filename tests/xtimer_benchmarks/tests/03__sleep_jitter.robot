@@ -39,7 +39,7 @@ Measure Sleep Jitter
 Repeat Measure Jitter
     [Arguments]     ${bg_timer_count}
     [Teardown]      PHILIP Reset
-    FOR  ${n}  IN RANGE  5
+    FOR  ${n}  IN RANGE  1
         Measure Sleep Jitter       ${bg_timer_count}
     END
 

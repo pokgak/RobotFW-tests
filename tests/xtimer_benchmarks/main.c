@@ -388,8 +388,8 @@ static void *__attribute__((optimize("O0"))) main_periodic_timer(void *arg)
     uint32_t last_wakeup = ztimer_now(ZTIMER_CLOCK);
 #endif
 
-    for (unsigned i = 0; i < HIL_TEST_REPEAT + 10; i++) {
-        if (i < 10) {
+    for (unsigned i = 0; i < HIL_TEST_REPEAT + 1; i++) {
+        if (i == 0) {
             TIMER_PERIODIC_WAKEUP(&last_wakeup, JITTER_MAIN_INTERVAL);
             continue;
         }
