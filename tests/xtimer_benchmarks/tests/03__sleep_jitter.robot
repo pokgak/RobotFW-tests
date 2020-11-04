@@ -11,7 +11,7 @@ Suite Setup    Run Keywords
 Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
-Test Template  Repeat Measure Jitter
+Test Template  Measure Sleep Jitter
 
 Force Tags  dev
 
@@ -27,14 +27,15 @@ Measure Sleep Jitter
 
     API Call Should Succeed    Sleep Jitter                     ${bg_timer_count}
     ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}
-    Record Property            main-timer-interval              ${RESULT['main-timer-interval']}
-    Record Property            bg-timer-interval                ${RESULT['bg-timer-interval']}
-    Record Property            bg-timer-count                   ${RESULT['bg-timer-count']}
-    API Call Should Succeed    PHILIP.Read Trace
+    Record Property            timer-interval                   ${RESULT['timer-interval']}
+    Record Property            timer-count                      ${RESULT['timer-count']}
+    Record Property            dut-start-time                   ${RESULT['start']}
+    Record Property            dut-wakeup-time                  ${RESULT['wakeups']}
 
-    ${FILTERED}=               DutDeviceIf.Filter Trace         trace=${RESULT['data']}    select=FALLING
-    ${RESULT}=                 DutDeviceIf.Compress Result      ${FILTERED}
-    Record Property            trace                            ${RESULT['diff']}
+    API Call Should Succeed    PHILIP.Read Trace
+    ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}
+    Record Property            hil-start-time                   ${RESULT['time'][0]}
+    Record Property            hil-wakeup-time                  ${RESULT['time'][1:-1]}
 
 Repeat Measure Jitter
     [Arguments]     ${bg_timer_count}
@@ -44,7 +45,6 @@ Repeat Measure Jitter
     END
 
 *** Test Cases ***    BG TIMERS
-0 BG Timers     0
 5 BG Timers     5
 10 BG Timers    10
 15 BG Timers    15

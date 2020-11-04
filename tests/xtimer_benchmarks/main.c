@@ -47,8 +47,7 @@
 #define HIL_TEST_GPIO       GPIO_PIN(HIL_DUT_IC_PORT, HIL_DUT_IC_PIN)
 #define HIL_START_TIMER()   gpio_set(HIL_TEST_GPIO)
 #define HIL_STOP_TIMER()    gpio_clear(HIL_TEST_GPIO)
-
-#define HIL_GPIO0           GPIO_PIN(HIL_DUT_GPIO0_PORT, HIL_DUT_GPIO0_PIN)
+#define HIL_TOGGLE_TIMER()    gpio_toggle(HIL_TEST_GPIO)
 
 #ifndef MODULE_ZTIMER
 #include "xtimer.h"
@@ -334,89 +333,76 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
 * JITTER
 ************************/
 
-#define JITTER_MAIN_INTERVAL (100 * MS_PER_SEC)
-#define JITTER_BG_INTERVAL   (50 * MS_PER_SEC)
-#define JITTER_BG_WAKEUPS    (2 * HIL_TEST_REPEAT)
+#define JITTER_TIMER_INTERVAL   (50 * MS_PER_SEC)
+#define JITTER_BG_WAKEUPS       (2 * HIL_TEST_REPEAT)
+
+static uint32_t jitter_start;
 
 typedef struct sleep_jitter_params {
-    uint8_t idx;
     TIMER_T *timer;
-    uint32_t duration;
-    uint32_t start;
+    uint8_t idx;
     uint8_t iter;
     uint8_t recorded;
 } jitter_params_t;
 
-static char jitter_stack[512];
-static volatile bool jitter_end;
 static mutex_t jitter_mutex = MUTEX_INIT_LOCKED;
 static jitter_params_t jitter_params[25];
-static uint32_t bg_wakeups[25 * JITTER_BG_WAKEUPS];
-static uint32_t main_wakeups[HIL_TEST_REPEAT];
+static uint32_t main_wakeups[JITTER_BG_WAKEUPS];
 static bool start_record = false;
+static bool jitter_end = false;
 
 void cleanup_jitter(unsigned count, jitter_params_t *params)
 {
-    jitter_end = true;
     TIMER_SLEEP(1 * US_PER_SEC);
     for (unsigned i = 0; i < count; ++i) {
         TIMER_REMOVE(params[i].timer);
     }
 
     memset(jitter_params, 0, sizeof(jitter_params_t) * 25);
-    memset(bg_wakeups, 0, sizeof(bg_wakeups));
     memset(main_wakeups, 0, sizeof(main_wakeups));
     start_record = false;
+    jitter_end = false;
 
     gpio_clear(HIL_TEST_GPIO);
 }
 
-static int _jitter_bg_offset(jitter_params_t *params)
+static uint32_t jitter_offset(uint32_t now, jitter_params_t *params)
 {
-    /* compensate past time */
-    uint32_t now = TIMER_NOW();
-    if (start_record && params->recorded < JITTER_BG_WAKEUPS) {
-        bg_wakeups[(params->idx * JITTER_BG_WAKEUPS) + (params->recorded++)] = now;
-    }
-    uint32_t next = ((++params->iter * JITTER_BG_INTERVAL) + params->start - (params->idx * 50));   // compensation
-    int32_t offset = next - now;
-    // printf("\niter: %u; next: %lu; offset: %ld; recorded: %u\n", params->iter, next, offset, params->recorded);
-    return offset;
+    uint32_t next_target = (++params->iter * JITTER_TIMER_INTERVAL) +
+                           jitter_start;
+
+    return next_target - now;
 }
 
-static void _sleep_jitter_cb(void *arg)
+static void jitter_main_cb(void *arg)
 {
-    gpio_toggle(HIL_GPIO0);
-
+    jitter_params_t *params = (jitter_params_t *)arg;
     if (!jitter_end) {
-        jitter_params_t *params = (jitter_params_t *)arg;
-        TIMER_SET(params->timer, _jitter_bg_offset(params));
-    }
-}
-
-static void *main_periodic_timer(void *arg)
-{
-    #ifndef MODULE_ZTIMER
-    xtimer_ticks32_t *last_wakeup = arg;
-#else
-    uint32_t *last_wakeup = arg;
-#endif
-
-    unsigned i = 0;
-    while (i < HIL_TEST_REPEAT) {
-        if (!start_record) {
-            TIMER_PERIODIC_WAKEUP(last_wakeup, JITTER_MAIN_INTERVAL);
-            continue;
+        uint32_t now = TIMER_NOW(); // move this to later??
+        if (start_record && params->recorded < JITTER_BG_WAKEUPS) {
+            HIL_TOGGLE_TIMER();
+            main_wakeups[params->recorded++] = now;
+            // printf("\niter: %u; recorded: %u; offset: %ld\n", params->iter,
+            //        params->recorded, offset);
         }
 
-        HIL_START_TIMER();
-        TIMER_PERIODIC_WAKEUP(last_wakeup, JITTER_MAIN_INTERVAL);
-        HIL_STOP_TIMER();
-        main_wakeups[i++] = xtimer_usec_from_ticks(*last_wakeup);
-    }
+        int32_t offset = jitter_offset(now, params);
+        TIMER_SET(params->timer, offset);
 
-    mutex_unlock(&jitter_mutex);
-    return NULL;
+        if (params->recorded >= JITTER_BG_WAKEUPS) {
+            jitter_end = true;
+            mutex_unlock(&jitter_mutex);
+        }
+    }
+}
+
+static void jitter_cb(void *arg)
+{
+    if (!jitter_end) {
+        jitter_params_t *params = (jitter_params_t *)arg;
+        int32_t offset = jitter_offset(TIMER_NOW(), params);
+        TIMER_SET(params->timer, offset);
+    }
 }
 
 int sleep_jitter_cmd(int argc, char **argv)
@@ -431,99 +417,52 @@ int sleep_jitter_cmd(int argc, char **argv)
 
     print_cmd(PARSER_DEV_NUM, "sleep_jitter");
 
-    unsigned bg_timer_count = atoi(argv[1]);
-    sprintf(printbuf, "%u", bg_timer_count);
-    print_data_dict_str(PARSER_DEV_NUM, "bg-timer-count", printbuf);
+    unsigned timer_count = atoi(argv[1]);
+    sprintf(printbuf, "%u", timer_count);
+    print_data_dict_str(PARSER_DEV_NUM, "timer-count", printbuf);
 
-    sprintf(printbuf, "%lu", JITTER_MAIN_INTERVAL);
-    print_data_dict_str(PARSER_DEV_NUM, "main-timer-interval", printbuf);
+    sprintf(printbuf, "%lu", JITTER_TIMER_INTERVAL);
+    print_data_dict_str(PARSER_DEV_NUM, "timer-interval", printbuf);
 
-    sprintf(printbuf, "%lu", JITTER_BG_INTERVAL);
-    print_data_dict_str(PARSER_DEV_NUM, "bg-timer-interval", printbuf);
-
-    if (bg_timer_count > ARRAY_SIZE(jitter_params)) {
-        print_data_str(PARSER_DEV_NUM,
-                       "bg_timers exceeded allocated jitter_params");
+    if (timer_count <= 0 || timer_count > ARRAY_SIZE(jitter_params)) {
+        print_data_str(PARSER_DEV_NUM, "timer count invalid");
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
         return -1;
     }
 
-    jitter_end = false;
-
-#ifndef MODULE_ZTIMER
-    xtimer_ticks32_t absolute_start = xtimer_now();
-    uint32_t absolute_start_usec = xtimer_usec_from_ticks(absolute_start);
-#else
-    uint32_t absolute_start = ztimer_now(ZTIMER_CLOCK);
-    uint32_t absolute_start_usec = absolute_start;
-#endif
+    jitter_start = TIMER_NOW();
+    HIL_START_TIMER();
 
     /* setup half of the background timers before the periodic timer */
-    for (unsigned i = 0; i < bg_timer_count / 2; i++) {
+    for (unsigned i = 0; i < timer_count; i++) {
         jitter_params[i].timer = &test_timers[i];
-        jitter_params[i].duration = JITTER_BG_INTERVAL;
-        jitter_params[i].start = absolute_start_usec;
         jitter_params[i].iter = 0;
         jitter_params[i].idx = i;
 
         TIMER_T *timer = jitter_params[i].timer;
-        timer->callback = _sleep_jitter_cb;
+        timer->callback = (i < timer_count - 1) ? jitter_cb : jitter_main_cb;
         timer->arg = &jitter_params[i];
-        TIMER_SET(timer, _jitter_bg_offset(&jitter_params[i]));
+        TIMER_SET(timer, jitter_offset(jitter_start, &jitter_params[i]));
     }
 
-    /* start the main periodic timer */
-
-    kernel_pid_t pid = thread_create(jitter_stack, sizeof(jitter_stack),
-                                     THREAD_PRIORITY_MAIN - 1, 0,
-                                     main_periodic_timer,
-                                     (void *)&absolute_start,
-                                     "main timer");
-    if (pid < 0) {
-        print_data_str(PARSER_DEV_NUM, "cannot start main timer");
-        print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
-        return -1;
-    }
-
-    // /* setup rest of the background timers after the periodic timer */
-    for (unsigned i = bg_timer_count / 2; i < bg_timer_count; i++) {
-        jitter_params[i].timer = &test_timers[i];
-        jitter_params[i].duration = JITTER_BG_INTERVAL;
-        jitter_params[i].start = absolute_start_usec;
-        jitter_params[i].iter = 0;
-        jitter_params[i].idx = i;
-
-        TIMER_T *timer = jitter_params[i].timer;
-        timer->callback = _sleep_jitter_cb;
-        timer->arg = &jitter_params[i];
-        TIMER_SET(timer, _jitter_bg_offset(&jitter_params[i]));
-    }
-
-        /* wait bg timers to start collidiig */
-    TIMER_SLEEP(5 * US_PER_SEC);
+    /* wait bg timers to start collidiig */
+    // TODO: do we need sleep?
+    // TIMER_SLEEP(1 * US_PER_SEC);
 
     start_record = true;
 
     mutex_lock(&jitter_mutex);
 
-    /* DEBUG only */
-    printf(", { \"absolute-start\": %" PRIu32 "", absolute_start_usec);
-
-    printf(", \"main_wakeups\": [");
-    for (unsigned i = 0; i < HIL_TEST_REPEAT; ++i) {
-        printf("%" PRIu32 "%s", main_wakeups[i], (i < HIL_TEST_REPEAT - 1) ? "," : "]");
-    }
-
-    for (unsigned i = 0; i < bg_timer_count; ++i) {
-        uint32_t *base = &bg_wakeups[i * JITTER_BG_WAKEUPS];
-        printf(", \"time-%u\": [", i);
-        for (unsigned j = 0; j < JITTER_BG_WAKEUPS; ++j) {
-            printf("%" PRIu32 "%s", *(base + j), (j < JITTER_BG_WAKEUPS - 1) ? "," : "]");
-        }
+    /* Print DUT timer values */
+    printf(", { \"start\": %" PRIu32 "", jitter_start);
+    printf(", \"wakeups\": [");
+    for (unsigned i = 0; i < JITTER_BG_WAKEUPS; ++i) {
+        printf("%" PRIu32 "%s", main_wakeups[i],
+               (i < JITTER_BG_WAKEUPS - 1) ? "," : "]");
     }
     printf(" }");
 
-    cleanup_jitter(bg_timer_count, jitter_params);
+    cleanup_jitter(timer_count, jitter_params);
 
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
     return 0;
@@ -681,10 +620,6 @@ int main(void)
     gpio_init(HIL_TEST_GPIO, GPIO_OUT);
     /* clear initial state */
     gpio_clear(HIL_TEST_GPIO);
-
-
-    gpio_init(HIL_GPIO0, GPIO_OUT);
-    gpio_clear(HIL_GPIO0);
 
     random_init(0);
 
