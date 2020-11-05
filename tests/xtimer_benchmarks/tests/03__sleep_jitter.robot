@@ -11,42 +11,34 @@ Suite Setup    Run Keywords
 Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
-Test Template  Measure Sleep Jitter
 
 Force Tags  dev
+
+*** Variables ***
+${repeat}   10
 
 *** Keywords ***
 Test Teardown
     Run Keyword If  '${KEYWORD_STATUS}' != 'PASS'     RIOT Reset
     PHILIP Reset
 
-Measure Sleep Jitter
+Measure Sleep Jitter With ${timer_count} Timers
     [Documentation]            Run the sleep jitter benchmark
-    [Arguments]                ${bg_timer_count}
     [Teardown]                 Test Teardown
 
-    API Call Should Succeed    Sleep Jitter                     ${bg_timer_count}
+    API Call Should Succeed    Sleep Jitter                     ${timer_count}
     ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}
     Record Property            timer-interval                   ${RESULT['timer-interval']}
-    Record Property            timer-count                      ${RESULT['timer-count']}
-    Record Property            dut-start-time                   ${RESULT['start']}
-    Record Property            dut-wakeup-time                  ${RESULT['wakeups']}
+    Record Property            dut-${timer_count}-start-time    ${RESULT['start']}
+    Record Property            dut-${timer_count}-wakeup-time   ${RESULT['wakeups']}
 
     API Call Should Succeed    PHILIP.Read Trace
     ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}
-    Record Property            hil-start-time                   ${RESULT['time'][0]}
-    Record Property            hil-wakeup-time                  ${RESULT['time'][1:-1]}
+    Record Property            hil-${timer_count}-start-time    ${RESULT['time'][0]}
+    Record Property            hil-${timer_count}-wakeup-time   ${RESULT['time'][1:-1]} # exclude start event
 
-Repeat Measure Jitter
-    [Arguments]     ${bg_timer_count}
-    [Teardown]      PHILIP Reset
-    FOR  ${n}  IN RANGE  1
-        Measure Sleep Jitter       ${bg_timer_count}
+*** Test Cases ***
+Measure Sleep Jitter With Increasing Timers
+    FOR  ${n}  IN RANGE  25
+        Repeat Keyword  5  Measure Sleep Jitter With ${n + 1} Timers
     END
-
-*** Test Cases ***    BG TIMERS
-5 BG Timers     5
-10 BG Timers    10
-15 BG Timers    15
-20 BG Timers    20
-25 BG Timers    25

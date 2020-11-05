@@ -362,8 +362,6 @@ void cleanup_jitter(unsigned count, jitter_params_t *params)
     memset(main_wakeups, 0, sizeof(main_wakeups));
     start_record = false;
     jitter_end = false;
-
-    gpio_clear(HIL_TEST_GPIO);
 }
 
 static uint32_t jitter_offset(uint32_t now, jitter_params_t *params)
