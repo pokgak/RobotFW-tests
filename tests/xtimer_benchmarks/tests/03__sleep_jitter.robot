@@ -39,6 +39,6 @@ Measure Sleep Jitter With ${timer_count} Timers
 
 *** Test Cases ***
 Measure Sleep Jitter With Increasing Timers
-    FOR  ${n}  IN RANGE  25
-        Repeat Keyword  5  Measure Sleep Jitter With ${n + 1} Timers
+    FOR  ${n}  IN RANGE  10
+        Repeat Keyword  3  Measure Sleep Jitter With ${n + 1} Timers
     END
