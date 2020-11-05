@@ -333,10 +333,8 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
 * JITTER
 ************************/
 
-#define JITTER_TIMER_INTERVAL   (50 * MS_PER_SEC)
-#define JITTER_BG_WAKEUPS       (2 * HIL_TEST_REPEAT)
-
-static uint32_t jitter_start;
+#define JITTER_TIMER_INTERVAL   (10 * MS_PER_SEC)
+#define JITTER_WAKEUPS       (2 * HIL_TEST_REPEAT)
 
 typedef struct sleep_jitter_params {
     TIMER_T *timer;
@@ -347,7 +345,8 @@ typedef struct sleep_jitter_params {
 
 static mutex_t jitter_mutex = MUTEX_INIT_LOCKED;
 static jitter_params_t jitter_params[25];
-static uint32_t main_wakeups[JITTER_BG_WAKEUPS];
+static uint32_t jitter_wakeups[JITTER_WAKEUPS];
+static uint32_t jitter_start;
 static bool start_record = false;
 static bool jitter_end = false;
 
@@ -359,35 +358,37 @@ void cleanup_jitter(unsigned count, jitter_params_t *params)
     }
 
     memset(jitter_params, 0, sizeof(jitter_params_t) * 25);
-    memset(main_wakeups, 0, sizeof(main_wakeups));
+    memset(jitter_wakeups, 0, sizeof(jitter_wakeups));
     start_record = false;
     jitter_end = false;
 }
 
-static uint32_t jitter_offset(uint32_t now, jitter_params_t *params)
+static uint32_t _next_target(jitter_params_t *params)
 {
     uint32_t next_target = (++params->iter * JITTER_TIMER_INTERVAL) +
                            jitter_start;
 
-    return next_target - now;
+    return next_target;
 }
 
 static void jitter_main_cb(void *arg)
 {
     jitter_params_t *params = (jitter_params_t *)arg;
+
     if (!jitter_end) {
         uint32_t now = TIMER_NOW(); // move this to later??
-        if (start_record && params->recorded < JITTER_BG_WAKEUPS) {
+        if (start_record && params->recorded < JITTER_WAKEUPS) {
             HIL_TOGGLE_TIMER();
-            main_wakeups[params->recorded++] = now;
+            jitter_wakeups[params->recorded++] = now;
             // printf("\niter: %u; recorded: %u; offset: %ld\n", params->iter,
             //        params->recorded, offset);
         }
 
-        int32_t offset = jitter_offset(now, params);
+        uint32_t next_target = _next_target(params);
+        int32_t offset = next_target - now;
         TIMER_SET(params->timer, offset);
 
-        if (params->recorded >= JITTER_BG_WAKEUPS) {
+        if (params->recorded >= JITTER_WAKEUPS) {
             jitter_end = true;
             mutex_unlock(&jitter_mutex);
         }
@@ -398,7 +399,7 @@ static void jitter_cb(void *arg)
 {
     if (!jitter_end) {
         jitter_params_t *params = (jitter_params_t *)arg;
-        int32_t offset = jitter_offset(TIMER_NOW(), params);
+        int32_t offset = _next_target(params) - TIMER_NOW();
         TIMER_SET(params->timer, offset);
     }
 }
@@ -440,23 +441,25 @@ int sleep_jitter_cmd(int argc, char **argv)
         TIMER_T *timer = jitter_params[i].timer;
         timer->callback = (i < timer_count - 1) ? jitter_cb : jitter_main_cb;
         timer->arg = &jitter_params[i];
-        TIMER_SET(timer, jitter_offset(jitter_start, &jitter_params[i]));
+        TIMER_SET(timer, _next_target(&jitter_params[i]) - jitter_start);
     }
 
     /* wait bg timers to start collidiig */
     // TODO: do we need sleep?
-    // TIMER_SLEEP(1 * US_PER_SEC);
+    TIMER_SLEEP(1 * US_PER_SEC);
 
+    unsigned start_iter = jitter_params[timer_count - 1].iter;
     start_record = true;
 
     mutex_lock(&jitter_mutex);
 
     /* Print DUT timer values */
-    printf(", { \"start\": %" PRIu32 "", jitter_start);
+    printf(", { \"start-time\": %" PRIu32 "", jitter_start);
+    printf(", \"start-iter\": %u", start_iter);
     printf(", \"wakeups\": [");
-    for (unsigned i = 0; i < JITTER_BG_WAKEUPS; ++i) {
-        printf("%" PRIu32 "%s", main_wakeups[i],
-               (i < JITTER_BG_WAKEUPS - 1) ? "," : "]");
+    for (unsigned i = 0; i < JITTER_WAKEUPS; ++i) {
+        printf("%" PRIu32 "%s", jitter_wakeups[i],
+               (i < JITTER_WAKEUPS - 1) ? "," : "]");
     }
     printf(" }");
 
