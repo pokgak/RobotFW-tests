@@ -29,7 +29,8 @@ Measure Sleep Jitter With ${timer_count} Timers
     API Call Should Succeed    Sleep Jitter                     ${timer_count}
     ${RESULT}=                 DutDeviceIf.Compress Result      ${RESULT['data']}
     Record Property            timer-interval                   ${RESULT['timer-interval']}
-    Record Property            dut-${timer_count}-start-time    ${RESULT['start']}
+    Record Property            ${timer_count}-start-iter        ${RESULT['start-iter']}
+    Record Property            dut-${timer_count}-start-time    ${RESULT['start-time']}
     Record Property            dut-${timer_count}-wakeup-time   ${RESULT['wakeups']}
 
     API Call Should Succeed    PHILIP.Read Trace
