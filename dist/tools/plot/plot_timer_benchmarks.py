@@ -377,4 +377,4 @@ if __name__ == "__main__":
     # plotter.plot_overhead("overhead.html")
     # plotter.plot_accuracy("accuracy")
     # plotter.plot_jitter("jitter")
-    plotter.plot_list_ops("list_operations")
+    # plotter.plot_list_ops("list_operations")

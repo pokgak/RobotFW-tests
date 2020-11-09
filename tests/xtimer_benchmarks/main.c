@@ -44,7 +44,7 @@
 #define HIL_TEST_REPEAT     (50)
 #define HIL_MAX_TIMERS      (100)
 
-#define HIL_TEST_GPIO       GPIO_PIN(HIL_DUT_IC_PORT, HIL_DUT_IC_PIN)
+#define HIL_TEST_GPIO       GPIO_PIN(TIMER_TEST_PORT, TIMER_TEST_PIN)
 #define HIL_START_TIMER()   gpio_set(HIL_TEST_GPIO)
 #define HIL_STOP_TIMER()    gpio_clear(HIL_TEST_GPIO)
 #define HIL_TOGGLE_TIMER()    gpio_toggle(HIL_TEST_GPIO)
@@ -57,8 +57,6 @@
 #define TIMER_SET(timer, duration)  xtimer_set(timer, duration)
 #define TIMER_REMOVE(timer)         xtimer_remove(timer)
 #define TIMER_SLEEP(duration)       xtimer_usleep(duration)
-#define TIMER_PERIODIC_WAKEUP(last_wakeup, duration)  \
-    xtimer_periodic_wakeup(last_wakeup, duration)
 #else
 #include "ztimer.h"
 
@@ -68,8 +66,6 @@
 #define TIMER_SET(timer, duration)  ztimer_set(ZTIMER_CLOCK, timer, duration)
 #define TIMER_REMOVE(timer)         ztimer_remove(ZTIMER_CLOCK, timer)
 #define TIMER_SLEEP(duration)       ztimer_sleep(ZTIMER_CLOCK, duration)
-#define TIMER_PERIODIC_WAKEUP(last_wakeup, duration)  \
-    ztimer_periodic_wakeup(ZTIMER_CLOCK, last_wakeup, duration)
 #endif
 
 char printbuf[SHELL_DEFAULT_BUFSIZE] = { 0 };
@@ -79,7 +75,7 @@ uint8_t out_buf[64];
 static TIMER_T test_timers[HIL_MAX_TIMERS];
 
 /* Default is whatever, just some small delay if the user forgets to initialize */
-static uint32_t spin_max = 128;
+static uint32_t spin_max = 64;
 
 /************************
 * HELPER FUNCTIONS
@@ -99,7 +95,7 @@ static void spin(uint32_t limit)
 
 void spin_random_delay(void)
 {
-    uint32_t limit = random_uint32_range(64, spin_max);
+    uint32_t limit = random_uint32_range(0, spin_max);
 
     spin(limit);
 }
@@ -117,7 +113,7 @@ void cleanup_overhead(void)
     }
 }
 
-int __attribute__((optimize("O0"))) overhead_gpio_cmd(int argc, char **argv)
+int overhead_gpio_cmd(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
@@ -129,7 +125,6 @@ int __attribute__((optimize("O0"))) overhead_gpio_cmd(int argc, char **argv)
     for (int i = 0; i < HIL_TEST_REPEAT; i++) {
         spin_random_delay();
         HIL_START_TIMER();
-        // __asm__ volatile ("");
         HIL_STOP_TIMER();
     }
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
@@ -335,6 +330,7 @@ int sleep_accuracy_timer_sleep_cmd(int argc, char **argv)
 
 #define JITTER_TIMER_INTERVAL   (10 * MS_PER_SEC)
 #define JITTER_WAKEUPS       (2 * HIL_TEST_REPEAT)
+#define JITTER_START_RECORD  5
 
 typedef struct sleep_jitter_params {
     TIMER_T *timer;
@@ -347,6 +343,7 @@ static mutex_t jitter_mutex = MUTEX_INIT_LOCKED;
 static jitter_params_t jitter_params[25];
 static uint32_t jitter_wakeups[JITTER_WAKEUPS];
 static uint32_t jitter_start;
+static unsigned start_iter;
 static bool start_record = false;
 static bool jitter_end = false;
 
@@ -359,16 +356,14 @@ void cleanup_jitter(unsigned count, jitter_params_t *params)
 
     memset(jitter_params, 0, sizeof(jitter_params_t) * 25);
     memset(jitter_wakeups, 0, sizeof(jitter_wakeups));
+    start_iter = 0;
     start_record = false;
     jitter_end = false;
 }
 
 static uint32_t _next_target(jitter_params_t *params)
 {
-    uint32_t next_target = (++params->iter * JITTER_TIMER_INTERVAL) +
-                           jitter_start;
-
-    return next_target;
+    return (++params->iter * JITTER_TIMER_INTERVAL) + jitter_start;
 }
 
 static void jitter_main_cb(void *arg)
@@ -376,20 +371,16 @@ static void jitter_main_cb(void *arg)
     jitter_params_t *params = (jitter_params_t *)arg;
 
     if (!jitter_end) {
-        uint32_t now = TIMER_NOW(); // move this to later??
-        if (start_record && params->recorded < JITTER_WAKEUPS) {
+        uint32_t now = TIMER_NOW();
+        if (start_record) {
             HIL_TOGGLE_TIMER();
             jitter_wakeups[params->recorded++] = now;
-            // printf("\niter: %u; recorded: %u; offset: %ld\n", params->iter,
-            //        params->recorded, offset);
         }
+        TIMER_SET(params->timer, _next_target(params) - now);
 
-        uint32_t next_target = _next_target(params);
-        int32_t offset = next_target - now;
-        TIMER_SET(params->timer, offset);
-
-        if (params->recorded >= JITTER_WAKEUPS) {
+        if (params->recorded  >= JITTER_WAKEUPS) {
             jitter_end = true;
+            start_record = false;
             mutex_unlock(&jitter_mutex);
         }
     }
@@ -399,8 +390,7 @@ static void jitter_cb(void *arg)
 {
     if (!jitter_end) {
         jitter_params_t *params = (jitter_params_t *)arg;
-        int32_t offset = _next_target(params) - TIMER_NOW();
-        TIMER_SET(params->timer, offset);
+        TIMER_SET(params->timer, _next_target(params) - TIMER_NOW());
     }
 }
 
@@ -445,10 +435,8 @@ int sleep_jitter_cmd(int argc, char **argv)
     }
 
     /* wait bg timers to start collidiig */
-    // TODO: do we need sleep?
     TIMER_SLEEP(1 * US_PER_SEC);
-
-    unsigned start_iter = jitter_params[timer_count - 1].iter;
+    start_iter = jitter_params[timer_count - 1].iter;
     start_record = true;
 
     mutex_lock(&jitter_mutex);

@@ -15,7 +15,7 @@ ifeq (,$(HIL_DUT_IC_PORT))
 $(error	HIL_DUT_IC_PORT not defined)
 endif
 
-CFLAGS+= -DHIL_DUT_IC_PIN=$(HIL_DUT_IC_PIN) -DHIL_DUT_IC_PORT=$(HIL_DUT_IC_PORT)
+CFLAGS+= -DTIMER_TEST_PIN=$(HIL_DUT_IC_PIN) -DTIMER_TEST_PORT=$(HIL_DUT_IC_PORT)
 
 
 include $(RIOTBASE)/Makefile.include
