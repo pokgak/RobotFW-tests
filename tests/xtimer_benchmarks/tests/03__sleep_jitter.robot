@@ -14,9 +14,6 @@ Test Setup     Run Keywords
 
 Force Tags  dev
 
-*** Variables ***
-${repeat}   10
-
 *** Keywords ***
 Test Teardown
     Run Keyword If  '${KEYWORD_STATUS}' != 'PASS'     RIOT Reset

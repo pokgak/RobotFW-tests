@@ -355,10 +355,13 @@ void cleanup_jitter(unsigned count, jitter_params_t *params)
     }
 
     memset(jitter_params, 0, sizeof(jitter_params_t) * 25);
-    memset(jitter_wakeups, 0, sizeof(jitter_wakeups));
+    memset(jitter_wakeups, 0, sizeof(uint32_t) * 25);
+    jitter_start = 0;
     start_iter = 0;
     start_record = false;
     jitter_end = false;
+
+    HIL_STOP_TIMER();
 }
 
 static uint32_t _next_target(jitter_params_t *params)
@@ -402,8 +405,6 @@ int sleep_jitter_cmd(int argc, char **argv)
         return -1;
     }
 
-    gpio_clear(HIL_TEST_GPIO);
-
     print_cmd(PARSER_DEV_NUM, "sleep_jitter");
 
     unsigned timer_count = atoi(argv[1]);
@@ -434,8 +435,6 @@ int sleep_jitter_cmd(int argc, char **argv)
         TIMER_SET(timer, _next_target(&jitter_params[i]) - jitter_start);
     }
 
-    /* wait bg timers to start collidiig */
-    TIMER_SLEEP(1 * US_PER_SEC);
     start_iter = jitter_params[timer_count - 1].iter;
     start_record = true;
 
