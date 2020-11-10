@@ -343,7 +343,6 @@ static mutex_t jitter_mutex = MUTEX_INIT_LOCKED;
 static jitter_params_t jitter_params[25];
 static uint32_t jitter_wakeups[JITTER_WAKEUPS];
 static uint32_t jitter_start;
-static unsigned start_iter;
 static bool start_record = false;
 static bool jitter_end = false;
 
@@ -435,14 +434,12 @@ int sleep_jitter_cmd(int argc, char **argv)
         TIMER_SET(timer, _next_target(&jitter_params[i]) - jitter_start);
     }
 
-    start_iter = jitter_params[timer_count - 1].iter;
     start_record = true;
 
     mutex_lock(&jitter_mutex);
 
     /* Print DUT timer values */
     printf(", { \"start-time\": %" PRIu32 "", jitter_start);
-    printf(", \"start-iter\": %u", start_iter);
     printf(", \"wakeups\": [");
     for (unsigned i = 0; i < JITTER_WAKEUPS; ++i) {
         printf("%" PRIu32 "%s", jitter_wakeups[i],
