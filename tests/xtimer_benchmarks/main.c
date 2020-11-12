@@ -248,29 +248,48 @@ error:
 
 int timer_overhead_nth_timer_cmd(int argc, char **argv)
 {
-    if (argc < 2) {
+    if (argc < 3) {
         print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
         return -1;
     }
 
     gpio_clear(HIL_TEST_GPIO);
 
-    // const char *method = argv[1];
-    unsigned timer_idx = atoi(argv[1]);
+    const char *method = argv[1];
+    unsigned timer_idx = atoi(argv[2]);
 
-    for (unsigned n = 0; n < HIL_TEST_REPEAT; ++n) {
-        /* set all but the last timer */
-        for (unsigned i = 0; i < timer_idx; ++i) {
-            TIMER_SET(&test_timers[i], _delay(i));
+    if (strcmp(method, "set") == 0) {
+        for (unsigned n = 0; n < HIL_TEST_REPEAT; ++n) {
+            /* set all but the last timer */
+            for (unsigned i = 0; i < timer_idx - 1; ++i) {
+                TIMER_SET(&test_timers[i], _delay(i));
+            }
+
+            spin_random_delay();
+
+            /* set the last timer */
+            HIL_START_TIMER();
+            TIMER_SET(&test_timers[timer_idx - 1], _delay(timer_idx - 1));
+            HIL_STOP_TIMER();
         }
-
-        spin_random_delay();
-
-        /* set the last timer */
-        HIL_START_TIMER();
-        TIMER_SET(&test_timers[timer_idx], _delay(timer_idx));
-        HIL_STOP_TIMER();
     }
+    else if (strcmp(method, "remove") == 0)
+    {
+        for (unsigned n = 0; n < HIL_TEST_REPEAT; ++n) {
+            /* set all timer */
+            for (unsigned i = 0; i < timer_idx; ++i) {
+                TIMER_SET(&test_timers[i], _delay(i));
+            }
+
+            spin_random_delay();
+
+            /* set the last timer */
+            HIL_START_TIMER();
+            TIMER_REMOVE(&test_timers[timer_idx]);
+            HIL_STOP_TIMER();
+        }
+    }
+
 
     cleanup_overhead();
 

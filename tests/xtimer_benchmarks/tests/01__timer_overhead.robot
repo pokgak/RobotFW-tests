@@ -35,15 +35,15 @@ Measure Timer Overhead
     Record Property    overhead-${no}-${method}-${position}-timer    ${OVERHEAD['diff']}
 
 Measure Timer List Overhead
-    [Arguments]     ${position}
+    [Arguments]     ${method}  ${position}
     [Teardown]  Test Teardown
 
-    API Call Should Succeed    Overhead Timer List            ${position}
+    API Call Should Succeed    Overhead Timer List            ${method}  ${position}
     API Call Should Succeed    PHILIP.Read Trace
     ${RESULT}=                 DutDeviceIf.Filter Trace       trace=${RESULT['data']}        select=FALLING
     ${OVERHEAD}=               DutDeviceIf.Compress Result    ${RESULT}
 
-    Record Property     overhead-00-list-${position}-timer    ${OVERHEAD['diff']}
+    Record Property     00-overhead-list-${position}-${method}-timer    ${OVERHEAD['diff']}
 
 
 Measure Timer Now Overhead
@@ -60,11 +60,6 @@ Measure GPIO Overhead
 
     API Call Should Succeed    Overhead GPIO
     API Call Should Succeed    PHILIP.Read Trace
-
-    Record Property     debug-uncompressed  ${RESULT['data']}
-
-    ${debug-compressed}=     DutDeviceIf.Compress Result   ${RESULT['data']}
-    Record Property     debug-compressed  ${debug-compressed}
 
     ${RESULT}=                 DutDeviceIf.Filter Trace                   trace=${RESULT['data']}     select=FALLING
     ${GPIO_OVERHEAD}=          DutDeviceIf.Compress Result                ${RESULT}
@@ -93,18 +88,24 @@ Measure Overhead TIMER_NOW
     Repeat Keyword  20  Measure Timer Now Overhead
 
 # set timer
-Measure Overhead Set First Timer     Measure Timer Overhead    02    set    first
-Measure Overhead Set Middle Timer    Measure Timer Overhead    03    set    middle
-Measure Overhead Set Last Timer      Measure Timer Overhead    04    set    last
-# # remove timer
-Measure Overhead Remove First Timer     Measure Timer Overhead    05    remove    first
-Measure Overhead Remove Middle Timer    Measure Timer Overhead    06    remove    middle
-Measure Overhead Remove Last Timer      Measure Timer Overhead    07    remove    last
+# Measure Overhead Set First Timer     Measure Timer Overhead    02    set    first
+# Measure Overhead Set Middle Timer    Measure Timer Overhead    03    set    middle
+# Measure Overhead Set Last Timer      Measure Timer Overhead    04    set    last
+# # # remove timer
+# Measure Overhead Remove First Timer     Measure Timer Overhead    05    remove    first
+# Measure Overhead Remove Middle Timer    Measure Timer Overhead    06    remove    middle
+# Measure Overhead Remove Last Timer      Measure Timer Overhead    07    remove    last
 
-Measure Overhead List
+Measure Overhead Set List
     [Teardown]  Run Keyword     PHILIP Reset
     FOR  ${n}  IN RANGE  25
-        Measure Timer List Overhead     ${n + 1}
+        Measure Timer List Overhead     set     ${n + 1}
+    END
+
+Measure Overhead Remove List
+    [Teardown]  Run Keyword     PHILIP Reset
+    FOR  ${n}  IN RANGE  25
+        Measure Timer List Overhead     remove     ${n + 1}
     END
 
 # list operations
