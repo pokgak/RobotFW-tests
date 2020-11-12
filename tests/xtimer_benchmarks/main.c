@@ -356,7 +356,6 @@ void cleanup_jitter(unsigned count, jitter_params_t *params)
     memset(jitter_params, 0, sizeof(jitter_params_t) * 25);
     memset(jitter_wakeups, 0, sizeof(uint32_t) * 25);
     jitter_start = 0;
-    start_iter = 0;
     start_record = false;
     jitter_end = false;
 
