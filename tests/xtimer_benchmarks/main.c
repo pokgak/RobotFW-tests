@@ -42,7 +42,7 @@
 #endif
 
 #define HIL_TEST_REPEAT     (50)
-#define HIL_MAX_TIMERS      (100)
+#define HIL_MAX_TIMERS      (50)
 
 #define HIL_TEST_GPIO       GPIO_PIN(TIMER_TEST_PORT, TIMER_TEST_PIN)
 #define HIL_START_TIMER()   gpio_set(HIL_TEST_GPIO)
@@ -243,6 +243,39 @@ error:
     cleanup_overhead();
 
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
+    return 0;
+}
+
+int timer_overhead_nth_timer_cmd(int argc, char **argv)
+{
+    if (argc < 2) {
+        print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
+        return -1;
+    }
+
+    gpio_clear(HIL_TEST_GPIO);
+
+    // const char *method = argv[1];
+    unsigned timer_idx = atoi(argv[1]);
+
+    for (unsigned n = 0; n < HIL_TEST_REPEAT; ++n) {
+        /* set all but the last timer */
+        for (unsigned i = 0; i < timer_idx; ++i) {
+            TIMER_SET(&test_timers[i], _delay(i));
+        }
+
+        spin_random_delay();
+
+        /* set the last timer */
+        HIL_START_TIMER();
+        TIMER_SET(&test_timers[timer_idx], _delay(timer_idx));
+        HIL_STOP_TIMER();
+    }
+
+    cleanup_overhead();
+
+    print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
+
     return 0;
 }
 
@@ -527,6 +560,10 @@ int list_ops_cmd(int argc, char **argv)
     return 0;
 }
 
+/************************
+* ETC
+************************/
+
 int cmd_get_timer_version(int argc, char **argv)
 {
     (void)argv;
@@ -582,6 +619,8 @@ static const shell_command_t shell_commands[] = {
       overhead_timer_now },
     { "overhead_timer", "timer set/remove overhead",
       timer_overhead_timer_cmd },
+    { "overhead_timer_list", "timer nth list overhead",
+      timer_overhead_nth_timer_cmd },
     { "sleep_accuracy_timer_sleep", "Sleep for specified time",
       sleep_accuracy_timer_sleep_cmd },
     { "sleep_accuracy_timer_set", "Sleep for specified time",

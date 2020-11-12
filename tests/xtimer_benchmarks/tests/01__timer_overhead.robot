@@ -13,7 +13,7 @@ Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
 
-# Force Tags     dev
+Force Tags     dev
 
 *** Keywords ***
 Test Teardown
@@ -33,6 +33,18 @@ Measure Timer Overhead
     ${OVERHEAD}=               DutDeviceIf.Compress Result    ${RESULT}
 
     Record Property    overhead-${no}-${method}-${position}-timer    ${OVERHEAD['diff']}
+
+Measure Timer List Overhead
+    [Arguments]     ${position}
+    [Teardown]  Test Teardown
+
+    API Call Should Succeed    Overhead Timer List            ${position}
+    API Call Should Succeed    PHILIP.Read Trace
+    ${RESULT}=                 DutDeviceIf.Filter Trace       trace=${RESULT['data']}        select=FALLING
+    ${OVERHEAD}=               DutDeviceIf.Compress Result    ${RESULT}
+
+    Record Property     overhead-00-list-${position}-timer    ${OVERHEAD['diff']}
+
 
 Measure Timer Now Overhead
     [Teardown]  Test Teardown
@@ -88,6 +100,12 @@ Measure Overhead Set Last Timer      Measure Timer Overhead    04    set    last
 Measure Overhead Remove First Timer     Measure Timer Overhead    05    remove    first
 Measure Overhead Remove Middle Timer    Measure Timer Overhead    06    remove    middle
 Measure Overhead Remove Last Timer      Measure Timer Overhead    07    remove    last
+
+Measure Overhead List
+    [Teardown]  Run Keyword     PHILIP Reset
+    FOR  ${n}  IN RANGE  25
+        Measure Timer List Overhead     ${n + 1}
+    END
 
 # list operations
 # Measure Add Timers
