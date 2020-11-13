@@ -43,7 +43,7 @@ Measure Timer List Overhead
     ${RESULT}=                 DutDeviceIf.Filter Trace       trace=${RESULT['data']}        select=FALLING
     ${OVERHEAD}=               DutDeviceIf.Compress Result    ${RESULT}
 
-    Record Property     00-overhead-list-${position}-${method}-timer    ${OVERHEAD['diff']}
+    Record Property     00-overhead-${position}-${method}    ${OVERHEAD['diff']}
 
 
 Measure Timer Now Overhead
