@@ -216,6 +216,8 @@ int timer_overhead_timer_cmd(int argc, char **argv)
             HIL_START_TIMER();
             TIMER_SET(&test_timers[timer_idx], _delay(timer_idx));
             HIL_STOP_TIMER();
+
+            cleanup_overhead();
         }
     }
     else if (strcmp(method, "remove") == 0) {
@@ -231,6 +233,8 @@ int timer_overhead_timer_cmd(int argc, char **argv)
             HIL_START_TIMER();
             TIMER_REMOVE(&test_timers[timer_idx]);
             HIL_STOP_TIMER();
+
+            cleanup_overhead();
         }
     }
     else {
@@ -256,12 +260,13 @@ int timer_overhead_nth_timer_cmd(int argc, char **argv)
     gpio_clear(HIL_TEST_GPIO);
 
     const char *method = argv[1];
-    unsigned timer_idx = atoi(argv[2]);
+    unsigned timer_idx = atoi(argv[2]) - 1;
 
     if (strcmp(method, "set") == 0) {
+        puts("set!");
         for (unsigned n = 0; n < HIL_TEST_REPEAT; ++n) {
             /* set all but the last timer */
-            for (unsigned i = 0; i < timer_idx - 1; ++i) {
+            for (unsigned i = 0; i < timer_idx; ++i) {
                 TIMER_SET(&test_timers[i], _delay(i));
             }
 
@@ -269,12 +274,15 @@ int timer_overhead_nth_timer_cmd(int argc, char **argv)
 
             /* set the last timer */
             HIL_START_TIMER();
-            TIMER_SET(&test_timers[timer_idx - 1], _delay(timer_idx - 1));
+            // TIMER_SLEEP(10 *MS_PER_SEC);
+            TIMER_SET(&test_timers[timer_idx], _delay(timer_idx));
             HIL_STOP_TIMER();
+
+            cleanup_overhead();
         }
     }
-    else if (strcmp(method, "remove") == 0)
-    {
+    else if (strcmp(method, "remove") == 0) {
+        puts("remove!");
         for (unsigned n = 0; n < HIL_TEST_REPEAT; ++n) {
             /* set all timer */
             for (unsigned i = 0; i < timer_idx; ++i) {
@@ -287,6 +295,8 @@ int timer_overhead_nth_timer_cmd(int argc, char **argv)
             HIL_START_TIMER();
             TIMER_REMOVE(&test_timers[timer_idx]);
             HIL_STOP_TIMER();
+
+            cleanup_overhead();
         }
     }
 

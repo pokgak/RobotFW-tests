@@ -77,15 +77,15 @@ Set ${count} Timers
     Record Property            ${count}-timer-trace             ${RESULT['diff']}
 
 *** Test Cases ***
-Measure GPIO
-    [Teardown]  Run Keywords  PHILIP Reset
-    Repeat Keyword  20  Measure GPIO Overhead
+# Measure GPIO
+#     [Teardown]  Run Keywords  PHILIP Reset
+#     Repeat Keyword  20  Measure GPIO Overhead
 
 
 # get time
-Measure Overhead TIMER_NOW
-    [Teardown]  Run Keywords  PHILIP Reset
-    Repeat Keyword  20  Measure Timer Now Overhead
+# Measure Overhead TIMER_NOW
+#     [Teardown]  Run Keywords  PHILIP Reset
+#     Repeat Keyword  20  Measure Timer Now Overhead
 
 # set timer
 # Measure Overhead Set First Timer     Measure Timer Overhead    02    set    first
@@ -99,13 +99,15 @@ Measure Overhead TIMER_NOW
 Measure Overhead Set List
     [Teardown]  Run Keyword     PHILIP Reset
     FOR  ${n}  IN RANGE  25
-        Measure Timer List Overhead     set     ${n + 1}
+        Log to console     set ${n + 1}
+        Repeat Keyword  1 times  Measure Timer List Overhead     set     ${n + 1}
     END
 
 Measure Overhead Remove List
     [Teardown]  Run Keyword     PHILIP Reset
     FOR  ${n}  IN RANGE  25
-        Measure Timer List Overhead     remove     ${n + 1}
+        Log to console     remove ${n + 1}
+        Repeat Keyword  1 times  Measure Timer List Overhead     remove     ${n + 1}
     END
 
 # list operations
