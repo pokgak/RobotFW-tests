@@ -262,8 +262,14 @@ int timer_overhead_nth_timer_cmd(int argc, char **argv)
     const char *method = argv[1];
     unsigned timer_idx = atoi(argv[2]) - 1;
 
+    cleanup_overhead();
+
+    /* init the timers */
+    for (unsigned i = 0; i < HIL_MAX_TIMERS; ++i) {
+        test_timers[i].callback = _overhead_callback;
+    }
+
     if (strcmp(method, "set") == 0) {
-        puts("set!");
         for (unsigned n = 0; n < HIL_TEST_REPEAT; ++n) {
             /* set all but the last timer */
             for (unsigned i = 0; i < timer_idx; ++i) {
@@ -274,7 +280,6 @@ int timer_overhead_nth_timer_cmd(int argc, char **argv)
 
             /* set the last timer */
             HIL_START_TIMER();
-            // TIMER_SLEEP(10 *MS_PER_SEC);
             TIMER_SET(&test_timers[timer_idx], _delay(timer_idx));
             HIL_STOP_TIMER();
 
@@ -282,16 +287,15 @@ int timer_overhead_nth_timer_cmd(int argc, char **argv)
         }
     }
     else if (strcmp(method, "remove") == 0) {
-        puts("remove!");
         for (unsigned n = 0; n < HIL_TEST_REPEAT; ++n) {
             /* set all timer */
-            for (unsigned i = 0; i < timer_idx; ++i) {
+            for (unsigned i = 0; i <= timer_idx; ++i) {
                 TIMER_SET(&test_timers[i], _delay(i));
             }
 
             spin_random_delay();
 
-            /* set the last timer */
+            /* remove the last timer */
             HIL_START_TIMER();
             TIMER_REMOVE(&test_timers[timer_idx]);
             HIL_STOP_TIMER();
@@ -299,9 +303,6 @@ int timer_overhead_nth_timer_cmd(int argc, char **argv)
             cleanup_overhead();
         }
     }
-
-
-    cleanup_overhead();
 
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
 
@@ -549,47 +550,6 @@ int drift_cmd(int argc, char **argv)
 }
 
 /************************
-* List Operations
-************************/
-
-int list_ops_cmd(int argc, char **argv)
-{
-    if (argc < 2) {
-        print_data_str(PARSER_DEV_NUM, "Not enough arguments");
-        print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
-        return -1;
-    }
-
-    gpio_clear(HIL_TEST_GPIO);
-
-    int count = atoi(argv[1]);
-    if (count <= 0 || count > HIL_MAX_TIMERS) {
-        print_result(PARSER_DEV_NUM, TEST_RESULT_ERROR);
-        return -1;
-    }
-
-    for (int i = 0; i < count; i++) {
-        test_timers[i].callback = _overhead_callback;
-    }
-
-    for (unsigned i = 0; i < HIL_TEST_REPEAT; i++) {
-        HIL_START_TIMER();
-        for (int n = 0; n < count; ++n) {
-            /* _delay() makes sure new timer always last */
-            TIMER_SET(&test_timers[n], _delay(n));
-        }
-        HIL_STOP_TIMER();
-
-        for (int n = 0; n < count; ++n) {
-            TIMER_REMOVE(&test_timers[n]);
-        }
-    }
-
-    print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
-    return 0;
-}
-
-/************************
 * ETC
 ************************/
 
@@ -656,8 +616,6 @@ static const shell_command_t shell_commands[] = {
       sleep_accuracy_timer_set_cmd },
     { "sleep_jitter", "sleep jitter", sleep_jitter_cmd },
     { "drift", "Drift Simple benchmark", drift_cmd },
-    { "list_ops", "Set N timers", list_ops_cmd },
-    { "get_metadata", "Get the metadata of the test firmware",
       cmd_get_metadata },
     { "get_timer_version", "Get timer version", cmd_get_timer_version },
     { "gclear", "clear", cmd_gpio_clear },
