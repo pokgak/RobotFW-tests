@@ -40,7 +40,7 @@ class DutDeviceIf(DutShell):
 
     def overhead_timer_list(self, method, position):
         """Run the overhead timer list benchmark"""
-        return self.send_cmd("overhead_timer {} {}".format(method, position))
+        return self.send_cmd("overhead_timer_list {} {}".format(method, position))
 
     def sleep_accuracy_timer_sleep(self, duration):
         """Run the sleep accuracy benchmark"""
