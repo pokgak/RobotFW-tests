@@ -616,6 +616,7 @@ static const shell_command_t shell_commands[] = {
       sleep_accuracy_timer_set_cmd },
     { "sleep_jitter", "sleep jitter", sleep_jitter_cmd },
     { "drift", "Drift Simple benchmark", drift_cmd },
+    { "get_metadata", "Get the metadata of the test firmware",
       cmd_get_metadata },
     { "get_timer_version", "Get timer version", cmd_get_timer_version },
     { "gclear", "clear", cmd_gpio_clear },
