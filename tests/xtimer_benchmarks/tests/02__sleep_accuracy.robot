@@ -12,7 +12,10 @@ Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
 
-# Force Tags  dev
+Force Tags  dev
+
+*** Variables ***
+${repeat}  1
 
 *** Keywords ***
 Test Teardown
@@ -32,12 +35,12 @@ Measure Sleep Accuracy with ${type} for ${duration}
 Measure TIMER_SET Accuracy
     [Teardown]  Run Keywords  PHILIP Reset
     FOR     ${duration}     IN RANGE    1    101
-        Measure Sleep Accuracy with TIMER_SET for ${duration}
+        Repeat Keyword  ${repeat}  Measure Sleep Accuracy with TIMER_SET for ${duration}
     END
 
 Measure TIMER_SLEEP Accuracy
     [Teardown]  Run Keywords  PHILIP Reset
     FOR     ${duration}     IN RANGE    1    101
-        Measure Sleep Accuracy with TIMER_SLEEP for ${duration}
+        Repeat Keyword  ${repeat}  Measure Sleep Accuracy with TIMER_SLEEP for ${duration}
     END
 
