@@ -15,6 +15,9 @@ Test Setup     Run Keywords
 
 Force Tags     dev
 
+*** Variables ***
+${repeat}  1
+
 *** Keywords ***
 Test Teardown
     Run Keyword If  '${KEYWORD_STATUS}' != 'PASS'     RIOT Reset
@@ -79,20 +82,20 @@ Set ${count} Timers
 *** Test Cases ***
 Measure GPIO/
     [Teardown]  Run Keywords  PHILIP Reset
-    Repeat Keyword  2  Measure GPIO Overhead
+    Repeat Keyword  ${repeat}  Measure GPIO Overhead
 
 Measure Overhead TIMER_NOW
     [Teardown]  Run Keywords  PHILIP Reset
-    Repeat Keyword  2  Measure Timer Now Overhead
+    Repeat Keyword  ${repeat}  Measure Timer Now Overhead
 
 Measure Overhead Set List
     [Teardown]  Run Keyword     PHILIP Reset
     FOR  ${n}  IN RANGE  25
-        Repeat Keyword  1 times  Measure Timer List Overhead     set     ${n + 1}
+        Repeat Keyword  ${repeat}  Measure Timer List Overhead     set     ${n + 1}
     END
 
 Measure Overhead Remove List
     [Teardown]  Run Keyword     PHILIP Reset
     FOR  ${n}  IN RANGE  25
-        Repeat Keyword  1 times  Measure Timer List Overhead     remove     ${n + 1}
+        Repeat Keyword  ${repeat}  Measure Timer List Overhead     remove     ${n + 1}
     END
