@@ -79,11 +79,11 @@ Set ${count} Timers
 *** Test Cases ***
 Measure GPIO/
     [Teardown]  Run Keywords  PHILIP Reset
-    Repeat Keyword  20  Measure GPIO Overhead
+    Repeat Keyword  10  Measure GPIO Overhead
 
 Measure Overhead TIMER_NOW
     [Teardown]  Run Keywords  PHILIP Reset
-    Repeat Keyword  20  Measure Timer Now Overhead
+    Repeat Keyword  10  Measure Timer Now Overhead
 
 Measure Overhead Set List
     [Teardown]  Run Keyword     PHILIP Reset
