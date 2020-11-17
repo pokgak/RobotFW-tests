@@ -12,10 +12,10 @@ Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
 
-# Force Tags  dev
+Force Tags  dev
 
 *** Variables ***
-${repeat}  15
+${repeat}  2
 
 *** Keywords ***
 Test Teardown

@@ -16,7 +16,7 @@ Test Setup     Run Keywords
 # Force Tags     dev
 
 *** Variables ***
-${repeat}  20
+${repeat}  10
 
 *** Keywords ***
 Test Teardown
