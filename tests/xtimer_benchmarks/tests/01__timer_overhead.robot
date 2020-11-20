@@ -16,7 +16,8 @@ Test Setup     Run Keywords
 # Force Tags     dev
 
 *** Variables ***
-${repeat}  10
+${repeat_fast}  10
+${repeat}  5
 
 *** Keywords ***
 Test Teardown
@@ -82,11 +83,11 @@ Set ${count} Timers
 *** Test Cases ***
 Measure GPIO/
     [Teardown]  Run Keywords  PHILIP Reset
-    Repeat Keyword  ${repeat}  Measure GPIO Overhead
+    Repeat Keyword  ${repeat_fast}  Measure GPIO Overhead
 
 Measure Overhead TIMER_NOW
     [Teardown]  Run Keywords  PHILIP Reset
-    Repeat Keyword  ${repeat}  Measure Timer Now Overhead
+    Repeat Keyword  ${repeat_fast}  Measure Timer Now Overhead
 
 Measure Overhead Set List
     [Teardown]  Run Keyword     PHILIP Reset
