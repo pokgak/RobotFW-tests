@@ -13,7 +13,7 @@ Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
 
-# Force Tags     dev
+Force Tags     dev
 
 *** Variables ***
 ${repeat_fast}  10
@@ -27,6 +27,8 @@ Test Teardown
 Measure Timer Overhead
     [Arguments]    ${no}    ${method}    ${position}
     [Teardown]  Test Teardown
+
+    Run Keyword  PHILIP.Write and Execute  tmr.mode.trig_edge  1
 
     API Call Should Succeed    Overhead Timer                 ${method}                      ${position}
     ${RESULT}=                 Run Keyword                    DutDeviceIf.Compress Result    data=${RESULT['data']}
