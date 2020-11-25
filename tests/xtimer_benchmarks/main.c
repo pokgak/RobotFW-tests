@@ -127,6 +127,8 @@ int overhead_gpio_cmd(int argc, char **argv)
         HIL_STOP_TIMER();
         HIL_START_TIMER();
         HIL_STOP_TIMER();
+
+        TIMER_SLEEP(1000);
     }
     print_result(PARSER_DEV_NUM, TEST_RESULT_SUCCESS);
     return 0;

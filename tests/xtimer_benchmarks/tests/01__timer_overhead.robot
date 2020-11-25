@@ -64,12 +64,13 @@ Measure Timer Now Overhead
 Measure GPIO Overhead
     [Teardown]  Test Teardown
 
+    Run Keyword  PHILIP.Write and Execute  tmr.mode.trig_edge  1
+
     API Call Should Succeed    Overhead GPIO
     API Call Should Succeed    PHILIP.Read Trace
 
-    ${RESULT}=                 DutDeviceIf.Filter Trace                   trace=${RESULT['data']}     select=FALLING
-    ${GPIO_OVERHEAD}=          DutDeviceIf.Compress Result                ${RESULT}
-    Record Property            overhead-00-gpio                              ${GPIO_OVERHEAD['diff']}
+    ${GPIO_OVERHEAD}=          DutDeviceIf.Compress Result                ${RESULT['data']}
+    Record Property            overhead-00-gpio                           ${GPIO_OVERHEAD['diff'][1::2]}    # get only the elements at odd indices
 
 Set ${count} Timers
     [Documentation]            Run the list operations benchmark
@@ -83,7 +84,7 @@ Set ${count} Timers
     Record Property            ${count}-timer-trace             ${RESULT['diff']}
 
 *** Test Cases ***
-Measure GPIO/
+Measure GPIO
     [Teardown]  Run Keywords  PHILIP Reset
     Repeat Keyword  ${repeat_fast}  Measure GPIO Overhead
 
