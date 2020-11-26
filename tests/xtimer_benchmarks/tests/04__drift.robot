@@ -21,12 +21,12 @@ Measure Drift
     [Arguments]                ${duration}
 
     API Call Should Succeed    Drift                                 ${duration}
-    Record Property            dut-result-${duration}-repeat-${i}    ${RESULT['data']}
+    Record Property            dut-result-${duration}-repeat    ${RESULT['data']}
 
     API Call Should Succeed    PHILIP.Read Trace
     ${PHILIP_RES}=             DutDeviceIf.Filter Trace                 ${RESULT['data']}    select=FALLING
     ${RESULT}=                 DutDeviceIf.Compress Result              ${PHILIP_RES}
-    Record Property            philip-result-${duration}-repeat-${i}    ${RESULT['diff']}
+    Record Property            philip-result-${duration}-repeat    ${RESULT['diff']}
 
 *** Test Cases ***
 Measure Drift Template
