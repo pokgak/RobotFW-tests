@@ -13,7 +13,7 @@ Test Setup     Run Keywords
 ...            PHILIP Reset
 ...            API Sync Shell
 
-Force Tags  dev
+Force Tags  dev  long
 
 *** Test Cases ***
 Save Timer Version

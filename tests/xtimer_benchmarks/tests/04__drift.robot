@@ -17,9 +17,9 @@ Force Tags     long
 *** Keywords ***
 Measure Drift
     [Documentation]            Run the drift simple benchmark
+    [Teardown]     Run Keywords  PHILIP Reset
     [Arguments]                ${duration}
-    [Teardown]                 Run Keywords                          PHILIP Reset         API Sync Shell
-    FOR                        ${i}                                  IN RANGE             5
+
     API Call Should Succeed    Drift                                 ${duration}
     Record Property            dut-result-${duration}-repeat-${i}    ${RESULT['data']}
 
@@ -27,16 +27,15 @@ Measure Drift
     ${PHILIP_RES}=             DutDeviceIf.Filter Trace                 ${RESULT['data']}    select=FALLING
     ${RESULT}=                 DutDeviceIf.Compress Result              ${PHILIP_RES}
     Record Property            philip-result-${duration}-repeat-${i}    ${RESULT['diff']}
-    PHILIP Reset
-    END
 
 *** Test Cases ***
 Measure Drift Template
     [Teardown]  Run Keywords  PHILIP Reset
     [Template]  Measure Drift
     1000000
-    15000000
+    10000000
+    20000000
     30000000
-    45000000
+    40000000
+    50000000
     59000000
-    # 60000000
